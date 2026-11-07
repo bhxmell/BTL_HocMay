@@ -119,6 +119,10 @@ pip install -r requirements.txt
 
 ## 🚀 4. Hướng dẫn Chạy Dự án
 
+##
+
+python -m streamlit run app.py
+
 ### Cách 1: Chạy toàn bộ quy trình từ A đến Z (Khuyến nghị)
 Chạy script chính để tự động thực hiện: Nạp dữ liệu $\to$ EDA $\to$ Tiền xử lý $\to$ Vector hóa $\to$ Huấn luyện & Đánh giá:
 ```bash
@@ -193,3 +197,30 @@ Thực nghiệm so sánh 12 tổ hợp (4 thuật toán × 3 bộ đặc trưng)
 * **Bag-of-Words (BoW)** đạt kết quả tốt với **Naive Bayes** (F1-Macro: **~0.812**), phù hợp với giả định phân phối đa thức của dữ liệu đếm từ.
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
+
+Ví dụ 1 (Chủ đề thiên văn/vũ trụ):
+
+"We present observations of distant galaxies, black holes and cosmic microwave background radiation using modern space telescopes."
+
+→
+→ Bấm Dự đoán nhãn 
+→
+→ Kết quả sẽ ra: astro-ph (Astrophysics).
+
+Ví dụ 2 (Chủ đề lượng tử):
+
+"We study quantum entanglement, qubits state teleportation and decoherence in quantum computing circuits."
+
+→
+→ Bấm Dự đoán nhãn 
+→
+→ Kết quả sẽ ra: quant-ph (Quantum Physics).
+
+Ví dụ 3 (Chủ đề hạt cơ bản):
+
+"Calculation of prompt diphoton production cross sections at Tevatron and LHC energies using perturbative quantum chromodynamics."
+
+→
+→ Bấm Dự đoán nhãn 
+→
+→ Kết quả sẽ ra: hep-ph (High Energy Physics - Phenomenology).
