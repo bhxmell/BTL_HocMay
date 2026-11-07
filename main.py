@@ -29,7 +29,7 @@ def main():
     df_clean = preprocess_dataset(df_raw)
 
     # 4 & 5. Vector hóa (BoW, TF-IDF, Embeddings) và Huấn luyện & Đánh giá mô hình
-    print("\n[Bước 4 & 5] Vector hóa dữ liệu, huấn luyện 4 thuật toán và đánh giá...")
+    print("\n[Bước 4 & 5] Vector hóa dữ liệu, huấn luyện 7 thuật toán ML và đánh giá...")
     results = run_experiment(df_clean, top_k_classes=5)
 
     print("\n" + "=" * 60)

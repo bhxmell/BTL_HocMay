@@ -77,14 +77,17 @@ Văn bản sau khi làm sạch được chuyển thành 3 bộ vector số độ
 - Lọc Top 5 nhãn phổ biến nhất để đảm bảo đủ mẫu cho phân tầng.
 - Chia Train/Test theo tỉ lệ 80/20 với `stratify` (đảm bảo tỉ lệ nhãn giữ nguyên ở cả train và test).
 
-**4 thuật toán được huấn luyện trên mỗi bộ vector (tổng cộng 12 thí nghiệm):**
+**7 thuật toán được huấn luyện trên mỗi bộ vector (tổng cộng 21 thí nghiệm):**
 
 | Thuật toán | Mô tả ngắn | Ghi chú |
 |---|---|---|
 | **Naive Bayes** | Phân loại xác suất dựa trên định lý Bayes | `MultinomialNB` cho BoW/TF-IDF, `GaussianNB` cho Embeddings (vì Embeddings chứa giá trị âm) |
 | **Logistic Regression** | Hồi quy logistic đa lớp | `max_iter=1000` |
 | **SVM** | Máy vector hỗ trợ tuyến tính | `LinearSVC` |
-| **Random Forest** | Rừng ngẫu nhiên (tập hợp cây quyết định) | `n_estimators=100` |
+| **Decision Tree** | Cây quyết định phân loại nhị phân/đa lớp | `DecisionTreeClassifier` |
+| **Random Forest** | Rừng ngẫu nhiên (tập hợp nhiều cây quyết định) | `n_estimators=100` |
+| **KNN** | Thuật toán láng giềng gần nhất | `n_neighbors=5`, khoảng cách cosine cho Embeddings |
+| **MLP (Neural Net)** | Mạng nơ-ron nhân tạo đa tầng | 2 ẩn tầng `(128, 64)`, tối ưu bằng Adam |
 
 **Chỉ số đánh giá:** Accuracy, Precision, Recall, F1-Score (cả Macro và Weighted).
 
@@ -174,53 +177,54 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ## 📊 5. Tóm tắt Kết quả Thực nghiệm
 
-Thực nghiệm so sánh 12 tổ hợp (4 thuật toán × 3 bộ đặc trưng):
+Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
 |---|---|---|---|---|
 | **Embeddings** | **Logistic Regression** | **91.36%** | **0.884** | **0.910** |
+| **Embeddings** | **KNN** | **87.65%** | **0.836** | **0.868** |
+| **Embeddings** | **MLP (Neural Net)** | **90.12%** | **0.866** | **0.900** |
 | Embeddings | SVM | 88.89% | 0.853 | 0.885 |
-| BoW | Naive Bayes | 86.42% | 0.812 | 0.862 |
 | TF-IDF | SVM | 86.42% | 0.827 | 0.860 |
-| Embeddings | Naive Bayes | 85.19% | 0.790 | 0.852 |
+| BoW | MLP (Neural Net) | 86.42% | 0.819 | 0.862 |
+| BoW | Naive Bayes | 86.42% | 0.812 | 0.862 |
+| TF-IDF | MLP (Neural Net) | 85.19% | 0.802 | 0.849 |
 | BoW | Logistic Regression | 83.95% | 0.791 | 0.840 |
+| Embeddings | Naive Bayes | 85.19% | 0.790 | 0.852 |
 | Embeddings | Random Forest | 82.72% | 0.782 | 0.819 |
+| TF-IDF | KNN | 81.48% | 0.761 | 0.805 |
 | BoW | SVM | 79.01% | 0.743 | 0.794 |
 | BoW | Random Forest | 70.37% | 0.617 | 0.679 |
 | TF-IDF | Random Forest | 69.14% | 0.573 | 0.656 |
+| Embeddings | Decision Tree | 61.73% | 0.417 | 0.598 |
 | TF-IDF | Logistic Regression | 60.49% | 0.429 | 0.535 |
+| TF-IDF | Decision Tree | 60.49% | 0.450 | 0.607 |
+| BoW | Decision Tree | 58.02% | 0.413 | 0.557 |
 | TF-IDF | Naive Bayes | 48.15% | 0.157 | 0.325 |
+| BoW | KNN | 44.44% | 0.303 | 0.457 |
 
 **Nhận xét:**
-* **Sentence Embeddings** kết hợp với **Logistic Regression** đạt hiệu quả cao nhất (Accuracy: **~91.36%**, F1-Macro: **~0.884**) nhờ khả năng nắm bắt ngữ nghĩa sâu của mô hình pre-trained đa ngôn ngữ.
-* **TF-IDF** thể hiện hiệu năng tốt nhất khi kết hợp với **Linear SVM** (F1-Macro: **~0.827**), cho thấy SVM xử lý tốt dữ liệu thưa có trọng số.
-* **Bag-of-Words (BoW)** đạt kết quả tốt với **Naive Bayes** (F1-Macro: **~0.812**), phù hợp với giả định phân phối đa thức của dữ liệu đếm từ.
+* **Sentence Embeddings** kết hợp với **Logistic Regression** và **MLP (Mạng nơ-ron)** đạt hiệu quả dẫn đầu (Accuracy: **~90–91.36%**, F1-Macro: **~0.865–0.884**).
+* **KNN** khi dùng khoảng cách Cosine trên Sentence Embeddings đạt F1-Macro rất ấn tượng (**~0.836**), vượt trội so với khi dùng trên BoW/TF-IDF.
+* **Random Forest** (F1 ~0.617–0.782) vượt trội rõ rệt so với **Decision Tree đơn** (F1 ~0.413–0.450), minh chứng tính hiệu quả của phương pháp Ensemble Learning (kết hợp nhiều cây).
+* **Linear SVM** đạt hiệu năng xuất sắc trên TF-IDF (F1-Macro: **~0.827**).
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
 
-Ví dụ 1 (Chủ đề thiên văn/vũ trụ):
+---
 
-"We present observations of distant galaxies, black holes and cosmic microwave background radiation using modern space telescopes."
+## 💡 6. Các câu ví dụ mẫu thử nghiệm trên Web GUI (app.py)
 
-→
-→ Bấm Dự đoán nhãn 
-→
-→ Kết quả sẽ ra: astro-ph (Astrophysics).
+Bạn có thể copy các đoạn văn mẫu sau vào giao diện Web để kiểm thử khả năng dự đoán:
 
-Ví dụ 2 (Chủ đề lượng tử):
+* **Ví dụ 1 (Chủ đề thiên văn / vũ trụ):**
+  > *"We present observations of distant galaxies, black holes and cosmic microwave background radiation using modern space telescopes."*
+  * $\to$ **Dự đoán:** `astro-ph` (Astrophysics).
 
-"We study quantum entanglement, qubits state teleportation and decoherence in quantum computing circuits."
+* **Ví dụ 2 (Chủ đề vật lý lượng tử):**
+  > *"We study quantum entanglement, qubits state teleportation and decoherence in quantum computing circuits."*
+  * $\to$ **Dự đoán:** `quant-ph` (Quantum Physics).
 
-→
-→ Bấm Dự đoán nhãn 
-→
-→ Kết quả sẽ ra: quant-ph (Quantum Physics).
-
-Ví dụ 3 (Chủ đề hạt cơ bản):
-
-"Calculation of prompt diphoton production cross sections at Tevatron and LHC energies using perturbative quantum chromodynamics."
-
-→
-→ Bấm Dự đoán nhãn 
-→
-→ Kết quả sẽ ra: hep-ph (High Energy Physics - Phenomenology).
+* **Ví dụ 3 (Chủ đề hạt cơ bản / năng lượng cao):**
+  > *"Calculation of prompt diphoton production cross sections at Tevatron and LHC energies using perturbative quantum chromodynamics."*
+  * $\to$ **Dự đoán:** `hep-ph` (High Energy Physics - Phenomenology).

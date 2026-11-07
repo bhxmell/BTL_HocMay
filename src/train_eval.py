@@ -8,24 +8,30 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
 from src.vectorize import extract_bow, extract_tfidf, extract_embeddings
 
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "outputs"
 
 def get_models(feature_type: str):
-    """Khởi tạo danh sách 4 thuật toán ML (chọn Naive Bayes phù hợp cho từng loại đặc trưng)."""
+    """Khởi tạo danh sách 7 thuật toán ML (chọn Naive Bayes phù hợp cho từng loại đặc trưng)."""
     nb_model = GaussianNB() if feature_type == "Embeddings" else MultinomialNB()
     return {
         "Naive Bayes": nb_model,
         "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
         "SVM": LinearSVC(dual="auto", random_state=42),
+        "Decision Tree": DecisionTreeClassifier(random_state=42),
         "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+        "KNN": KNeighborsClassifier(n_neighbors=5, metric="cosine" if feature_type == "Embeddings" else "minkowski"),
+        "MLP (Neural Net)": MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42),
     }
 
 def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 0.2):
-    """Huấn luyện và đánh giá 4 mô hình trên 3 bộ vector đặc trưng (BoW, TF-IDF, Embeddings)."""
+    """Huấn luyện và đánh giá 7 mô hình trên 3 bộ vector đặc trưng (BoW, TF-IDF, Embeddings)."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # Lọc top K nhãn phổ biến nhất để đảm bảo stratify cân đối
@@ -97,11 +103,12 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 
     print(f"Đã lưu bảng kết quả: {csv_path} và {tex_path}")
 
     # 3. Vẽ biểu đồ so sánh F1-Score
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 6))
     sns.barplot(data=results_df, x="Model", y="F1_Macro", hue="Feature", palette="Set2")
-    plt.title("So sánh F1-Score (Macro) giữa các bộ vector đặc trưng")
+    plt.title("So sánh F1-Score (Macro) giữa các thuật toán và bộ vector đặc trưng")
     plt.ylabel("F1-Score (Macro)")
     plt.ylim(0, 1.0)
+    plt.xticks(rotation=15)
     plt.grid(axis="y", linestyle="--", alpha=0.7)
     plt.tight_layout()
     f1_plot_path = OUTPUT_DIR / "f1_comparison.png"

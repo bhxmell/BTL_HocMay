@@ -8,7 +8,10 @@ from src.preprocess import clean_text, tokenize_text
 from src.vectorize import extract_bow, extract_tfidf, extract_embeddings
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
 # Cấu hình trang
 st.set_page_config(page_title="Phân loại Văn bản ML", page_icon="📝", layout="centered")
@@ -17,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_PATH = BASE_DIR / "data" / "processed_data.csv"
 OUTPUT_DIR = BASE_DIR / "outputs"
 
-@st.cache_resource(show_spinner="Đang nạp dữ liệu và huấn luyện các mô hình...")
+@st.cache_resource(show_spinner="Đang nạp dữ liệu và huấn luyện 7 mô hình...")
 def load_and_train_models():
     """Huấn luyện sẵn các mô hình trên dữ liệu đã tiền xử lý để dự đoán tức thì."""
     if not DATA_PATH.exists():
@@ -33,27 +36,31 @@ def load_and_train_models():
     texts = df_filtered["cleaned_text"].astype(str).tolist()
     y = np.array(df_filtered["label"].tolist())
 
-    # 1. BoW + Naive Bayes
+    # 1. Trích xuất 3 bộ vector đặc trưng
     X_bow, bow_vec = extract_bow(texts)
-    nb_bow = MultinomialNB().fit(X_bow, y)
-
-    # 2. TF-IDF + SVM
     X_tfidf, tfidf_vec = extract_tfidf(texts)
-    svm_tfidf = LinearSVC(dual="auto", random_state=42).fit(X_tfidf, y)
-
-    # 3. Embeddings + Logistic Regression (Mô hình tốt nhất)
     X_emb, emb_model = extract_embeddings(texts)
+
+    # 2. Huấn luyện các mô hình tiêu biểu
+    nb_bow = MultinomialNB().fit(X_bow, y)
+    dt_tfidf = DecisionTreeClassifier(random_state=42).fit(X_tfidf, y)
+    svm_tfidf = LinearSVC(dual="auto", random_state=42).fit(X_tfidf, y)
+    knn_emb = KNeighborsClassifier(n_neighbors=5, metric="cosine").fit(X_emb, y)
+    mlp_emb = MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42).fit(X_emb, y)
     lr_emb = LogisticRegression(max_iter=1000, random_state=42).fit(X_emb, y)
 
     return {
-        "BoW + Naive Bayes": (bow_vec, nb_bow, "bow"),
-        "TF-IDF + SVM": (tfidf_vec, svm_tfidf, "tfidf"),
-        "Embeddings + Logistic Regression (Khuyên dùng)": (emb_model, lr_emb, "embeddings"),
+        "Embeddings + Logistic Regression (Khuyên dùng - F1 cao nhất)": (emb_model, lr_emb, "embeddings"),
+        "Embeddings + MLP (Mạng nơ-ron nhân tạo)": (emb_model, mlp_emb, "embeddings"),
+        "Embeddings + KNN (Láng giềng gần nhất)": (emb_model, knn_emb, "embeddings"),
+        "TF-IDF + SVM (Hỗ trợ vector tuyến tính)": (tfidf_vec, svm_tfidf, "tfidf"),
+        "TF-IDF + Decision Tree (Cây quyết định)": (tfidf_vec, dt_tfidf, "tfidf"),
+        "BoW + Naive Bayes (Xác suất phân loại)": (bow_vec, nb_bow, "bow"),
     }
 
 def main():
     st.title("Phân loại Văn bản Tự động")
-    st.write("Ứng dụng học máy phân loại văn bản khoa học / tóm tắt tài liệu.")
+    st.write("Ứng dụng học máy phân loại văn bản khoa học với 7 thuật toán đa dạng.")
 
     models_dict = load_and_train_models()
 
@@ -62,7 +69,7 @@ def main():
     chosen_model_name = st.selectbox(
         "Chọn giải thuật & phương pháp vector hóa:",
         list(models_dict.keys()),
-        index=2
+        index=0
     )
 
     # Nhập văn bản
@@ -83,7 +90,7 @@ def main():
         feature_extractor, model, feat_type = models_dict[chosen_model_name]
 
         # Vector hóa và dự đoán
-        if feat_type == "bow" or feat_type == "tfidf":
+        if feat_type in ("bow", "tfidf"):
             vec_input = feature_extractor.transform([tokenized])
             pred_label = model.predict(vec_input)[0]
         else: # embeddings
@@ -100,11 +107,11 @@ def main():
     st.subheader("📊 Xem biểu đồ kết quả thực nghiệm")
     chart_choice = st.selectbox(
         "Chọn biểu đồ muốn xem:",
-        ["Biểu đồ so sánh F1-Score", "Ma trận nhầm lẫn (Confusion Matrix)", "Phân phối nhãn (EDA)"]
+        ["Biểu đồ so sánh F1-Score (7 thuật toán)", "Ma trận nhầm lẫn (Confusion Matrix)", "Phân phối nhãn (EDA)"]
     )
 
     file_map = {
-        "Biểu đồ so sánh F1-Score": OUTPUT_DIR / "f1_comparison.png",
+        "Biểu đồ so sánh F1-Score (7 thuật toán)": OUTPUT_DIR / "f1_comparison.png",
         "Ma trận nhầm lẫn (Confusion Matrix)": OUTPUT_DIR / "confusion_matrix.png",
         "Phân phối nhãn (EDA)": OUTPUT_DIR / "label_distribution.png",
     }
@@ -116,4 +123,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
