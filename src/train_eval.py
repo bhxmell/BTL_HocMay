@@ -1,0 +1,146 @@
+from pathlib import Path
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.svm import LinearSVC
+
+from src.vectorize import extract_bow, extract_tfidf, extract_embeddings
+
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "outputs"
+
+def get_models(feature_type: str):
+    """Khởi tạo danh sách 4 thuật toán ML (chọn Naive Bayes phù hợp cho từng loại đặc trưng)."""
+    nb_model = GaussianNB() if feature_type == "Embeddings" else MultinomialNB()
+    return {
+        "Naive Bayes": nb_model,
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
+        "SVM": LinearSVC(dual="auto", random_state=42),
+        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+    }
+
+def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 0.2):
+    """Huấn luyện và đánh giá 4 mô hình trên 3 bộ vector đặc trưng (BoW, TF-IDF, Embeddings)."""
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Lọc top K nhãn phổ biến nhất để đảm bảo stratify cân đối
+    top_labels = df["label"].value_counts().nlargest(top_k_classes).index
+    df_filtered = df[df["label"].isin(top_labels)].copy().reset_index(drop=True)
+    texts = df_filtered["cleaned_text"].astype(str).tolist()
+    y = np.array(df_filtered["label"].tolist())
+
+    print(f"Tổng mẫu sau khi lọc Top {top_k_classes} nhãn: {len(df_filtered)}")
+
+    # 1. Trích xuất 3 bộ đặc trưng độc lập
+    print("Đang trích xuất đặc trưng BoW, TF-IDF và Embeddings...")
+    X_bow, _ = extract_bow(texts)
+    X_tfidf, _ = extract_tfidf(texts)
+    X_emb, _ = extract_embeddings(texts)
+
+    feature_dict = {
+        "BoW": X_bow,
+        "TF-IDF": X_tfidf,
+        "Embeddings": X_emb,
+    }
+
+    results = []
+    best_f1 = -1.0
+    best_cm_info = None
+
+    for feat_name, X in feature_dict.items():
+        # Stratified Train/Test Split (80/20)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, stratify=y, random_state=42
+        )
+
+        models = get_models(feat_name)
+        for model_name, model in models.items():
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+
+            acc = accuracy_score(y_test, y_pred)
+            p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(y_test, y_pred, average="macro", zero_division=0)
+            p_weighted, r_weighted, f1_weighted, _ = precision_recall_fscore_support(y_test, y_pred, average="weighted", zero_division=0)
+
+            results.append({
+                "Feature": feat_name,
+                "Model": model_name,
+                "Accuracy": acc,
+                "Precision_Macro": p_macro,
+                "Recall_Macro": r_macro,
+                "F1_Macro": f1_macro,
+                "Precision_Weighted": p_weighted,
+                "Recall_Weighted": r_weighted,
+                "F1_Weighted": f1_weighted,
+            })
+
+            if f1_macro > best_f1:
+                best_f1 = f1_macro
+                best_cm_info = {
+                    "cm": confusion_matrix(y_test, y_pred, labels=np.unique(y)),
+                    "labels": np.unique(y),
+                    "title": f"Confusion Matrix: {model_name} + {feat_name} (F1-Macro: {f1_macro:.3f})"
+                }
+
+    results_df = pd.DataFrame(results)
+
+    # 2. Lưu bảng kết quả CSV và LaTeX
+    csv_path = OUTPUT_DIR / "evaluation_results.csv"
+    results_df.to_csv(csv_path, index=False)
+    tex_path = OUTPUT_DIR / "evaluation_table.tex"
+    results_df.to_latex(tex_path, index=False, float_format="%.4f")
+    print(f"Đã lưu bảng kết quả: {csv_path} và {tex_path}")
+
+    # 3. Vẽ biểu đồ so sánh F1-Score
+    plt.figure(figsize=(10, 6))
+    sns.barplot(data=results_df, x="Model", y="F1_Macro", hue="Feature", palette="Set2")
+    plt.title("So sánh F1-Score (Macro) giữa các bộ vector đặc trưng")
+    plt.ylabel("F1-Score (Macro)")
+    plt.ylim(0, 1.0)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    f1_plot_path = OUTPUT_DIR / "f1_comparison.png"
+    plt.savefig(f1_plot_path, dpi=300)
+    plt.close()
+    print(f"Đã lưu biểu đồ so sánh F1: {f1_plot_path}")
+
+    # 4. Vẽ Confusion Matrix cho mô hình tốt nhất
+    if best_cm_info:
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(
+            best_cm_info["cm"],
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            xticklabels=best_cm_info["labels"],
+            yticklabels=best_cm_info["labels"]
+        )
+        plt.title(best_cm_info["title"])
+        plt.xlabel("Dự đoán (Predicted)")
+        plt.ylabel("Thực tế (Actual)")
+        plt.tight_layout()
+        cm_plot_path = OUTPUT_DIR / "confusion_matrix.png"
+        plt.savefig(cm_plot_path, dpi=300)
+        plt.close()
+        print(f"Đã lưu Confusion Matrix: {cm_plot_path}")
+
+    return results_df
+
+if __name__ == "__main__":
+    data_path = Path(__file__).resolve().parent.parent / "data" / "processed_data.csv"
+    if not data_path.exists():
+        from src.load_data import load_data
+        from src.preprocess import preprocess_dataset
+        df = load_data(sample_size=1000)
+        df = preprocess_dataset(df)
+    else:
+        df = pd.read_csv(data_path)
+
+    results = run_experiment(df, top_k_classes=5)
+    print("\nKết quả đánh giá tổng quan:")
+    print(results[["Feature", "Model", "Accuracy", "F1_Macro", "F1_Weighted"]].to_string())

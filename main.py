@@ -1,0 +1,42 @@
+import sys
+from pathlib import Path
+
+# Thêm thư mục gốc vào PYTHONPATH
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.append(str(BASE_DIR))
+
+from src.load_data import load_data
+from src.eda import explore_data
+from src.preprocess import preprocess_dataset
+from src.train_eval import run_experiment
+
+def main():
+    print("=" * 60)
+    print("QUY TRÌNH HỌC MÁY PHÂN LOẠI VĂN BẢN TỪ A ĐẾN Z")
+    print("=" * 60)
+
+    # 1. Nạp dữ liệu
+    print("\n[Bước 1/5] Nạp dữ liệu từ cache Hugging Face...")
+    df_raw = load_data(sample_size=1000)
+    print(f"-> Đã nạp {len(df_raw)} mẫu.")
+
+    # 2. Khám phá & Trực quan hóa dữ liệu (EDA)
+    print("\n[Bước 2/5] Khám phá dữ liệu (EDA) & xuất biểu đồ phân phối nhãn...")
+    explore_data(df_raw)
+
+    # 3. Tiền xử lý & Tách từ tiếng Việt
+    print("\n[Bước 3/5] Làm sạch văn bản và tách từ...")
+    df_clean = preprocess_dataset(df_raw)
+
+    # 4 & 5. Vector hóa (BoW, TF-IDF, Embeddings) và Huấn luyện & Đánh giá mô hình
+    print("\n[Bước 4 & 5] Vector hóa dữ liệu, huấn luyện 4 thuật toán và đánh giá...")
+    results = run_experiment(df_clean, top_k_classes=5)
+
+    print("\n" + "=" * 60)
+    print("HOÀN THÀNH TOÀN BỘ QUY TRÌNH!")
+    print("=" * 60)
+    print("Bảng tóm tắt kết quả:")
+    print(results[["Feature", "Model", "Accuracy", "F1_Macro", "F1_Weighted"]].to_string())
+
+if __name__ == "__main__":
+    main()

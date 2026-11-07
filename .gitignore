@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Hugging Face cache
+huggingface_cache/
+.cache/
+
+# Datasets and processed data (keep directory structure with .gitkeep)
+data/*
+!data/.gitkeep
+
+# Experiment outputs and figures (keep directory structure with .gitkeep)
+outputs/*
+!outputs/.gitkeep
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp

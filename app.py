@@ -1,0 +1,119 @@
+import os
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import streamlit as st
+
+from src.preprocess import clean_text, tokenize_text
+from src.vectorize import extract_bow, extract_tfidf, extract_embeddings
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import LinearSVC
+
+# Cấu hình trang
+st.set_page_config(page_title="Phân loại Văn bản ML", page_icon="📝", layout="centered")
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "data" / "processed_data.csv"
+OUTPUT_DIR = BASE_DIR / "outputs"
+
+@st.cache_resource(show_spinner="Đang nạp dữ liệu và huấn luyện các mô hình...")
+def load_and_train_models():
+    """Huấn luyện sẵn các mô hình trên dữ liệu đã tiền xử lý để dự đoán tức thì."""
+    if not DATA_PATH.exists():
+        from src.load_data import load_data
+        from src.preprocess import preprocess_dataset
+        df = load_data(sample_size=1000)
+        df = preprocess_dataset(df)
+    else:
+        df = pd.read_csv(DATA_PATH)
+
+    top_labels = df["label"].value_counts().nlargest(5).index
+    df_filtered = df[df["label"].isin(top_labels)].copy().reset_index(drop=True)
+    texts = df_filtered["cleaned_text"].astype(str).tolist()
+    y = np.array(df_filtered["label"].tolist())
+
+    # 1. BoW + Naive Bayes
+    X_bow, bow_vec = extract_bow(texts)
+    nb_bow = MultinomialNB().fit(X_bow, y)
+
+    # 2. TF-IDF + SVM
+    X_tfidf, tfidf_vec = extract_tfidf(texts)
+    svm_tfidf = LinearSVC(dual="auto", random_state=42).fit(X_tfidf, y)
+
+    # 3. Embeddings + Logistic Regression (Mô hình tốt nhất)
+    X_emb, emb_model = extract_embeddings(texts)
+    lr_emb = LogisticRegression(max_iter=1000, random_state=42).fit(X_emb, y)
+
+    return {
+        "BoW + Naive Bayes": (bow_vec, nb_bow, "bow"),
+        "TF-IDF + SVM": (tfidf_vec, svm_tfidf, "tfidf"),
+        "Embeddings + Logistic Regression (Khuyên dùng)": (emb_model, lr_emb, "embeddings"),
+    }
+
+def main():
+    st.title("Phân loại Văn bản Tự động")
+    st.write("Ứng dụng học máy phân loại văn bản khoa học / tóm tắt tài liệu.")
+
+    models_dict = load_and_train_models()
+
+    # Chọn mô hình
+    st.subheader("1. Cấu hình mô hình")
+    chosen_model_name = st.selectbox(
+        "Chọn giải thuật & phương pháp vector hóa:",
+        list(models_dict.keys()),
+        index=2
+    )
+
+    # Nhập văn bản
+    st.subheader("2. Nhập văn bản cần dự đoán")
+    default_text = "We propose a new deep learning approach for quantum particle physics and diphoton cross sections."
+    user_input = st.text_area("Văn bản đầu vào (tiếng Anh hoặc tiếng Việt):", value=default_text, height=120)
+
+    # Nút bấm dự đoán
+    if st.button("🚀 Dự đoán nhãn (Predict)", type="primary"):
+        if not user_input.strip():
+            st.warning("Vui lòng nhập văn bản trước khi dự đoán.")
+            return
+
+        # Tiền xử lý
+        cleaned = clean_text(user_input)
+        tokenized = tokenize_text(cleaned)
+
+        feature_extractor, model, feat_type = models_dict[chosen_model_name]
+
+        # Vector hóa và dự đoán
+        if feat_type == "bow" or feat_type == "tfidf":
+            vec_input = feature_extractor.transform([tokenized])
+            pred_label = model.predict(vec_input)[0]
+        else: # embeddings
+            emb_input = feature_extractor.encode([tokenized], show_progress_bar=False)
+            pred_label = model.predict(emb_input)[0]
+
+        st.success(f"**Kết quả dự đoán:** Nhãn `{pred_label}`")
+        with st.expander("Xem chi tiết tiền xử lý"):
+            st.write(f"- **Văn bản sau làm sạch & tách từ:** {tokenized}")
+            st.write(f"- **Mô hình sử dụng:** {chosen_model_name}")
+
+    # Xem biểu đồ phân tích
+    st.divider()
+    st.subheader("📊 Xem biểu đồ kết quả thực nghiệm")
+    chart_choice = st.selectbox(
+        "Chọn biểu đồ muốn xem:",
+        ["Biểu đồ so sánh F1-Score", "Ma trận nhầm lẫn (Confusion Matrix)", "Phân phối nhãn (EDA)"]
+    )
+
+    file_map = {
+        "Biểu đồ so sánh F1-Score": OUTPUT_DIR / "f1_comparison.png",
+        "Ma trận nhầm lẫn (Confusion Matrix)": OUTPUT_DIR / "confusion_matrix.png",
+        "Phân phối nhãn (EDA)": OUTPUT_DIR / "label_distribution.png",
+    }
+    target_img = file_map[chart_choice]
+    if target_img.exists():
+        st.image(str(target_img), use_container_width=True)
+    else:
+        st.info("Biểu đồ chưa được tạo. Hãy chạy file `main.py` để sinh đầy đủ biểu đồ.")
+
+if __name__ == "__main__":
+    main()
+

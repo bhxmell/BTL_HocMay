@@ -1,0 +1,195 @@
+# BÀI TẬP LỚN MÔN HỌC MÁY (MACHINE LEARNING)
+## Đề tài: Phân loại Văn bản Khoa học với các kỹ thuật Trích xuất Đặc trưng và Học máy
+
+Dự án triển khai quy trình hoàn chỉnh từ thu thập, khám phá dữ liệu (EDA), tiền xử lý văn bản tiếng Việt & tiếng Anh, trích xuất đặc trưng đa dạng (BoW, TF-IDF, Sentence Embeddings), đến huấn luyện và so sánh hiệu năng của 4 giải thuật Machine Learning (Naive Bayes, Logistic Regression, SVM, Random Forest). Dự án có kèm giao diện trực quan xây dựng bằng Streamlit.
+
+---
+
+## 📁 1. Cấu trúc thư mục
+
+```text
+BTL_HocMay/
+├── data/                    # Chứa tập dữ liệu thô và dữ liệu sau tiền xử lý (processed_data.csv)
+├── src/                     # Mã nguồn chính theo từng module
+│   ├── load_data.py         # Nạp dữ liệu từ Hugging Face Cache
+│   ├── eda.py               # Khám phá dữ liệu & xuất biểu đồ phân phối nhãn
+│   ├── preprocess.py        # Làm sạch văn bản & tách từ tiếng Việt (pyvi)
+│   ├── vectorize.py         # Trích xuất đặc trưng (BoW, TF-IDF, Sentence Embeddings)
+│   └── train_eval.py        # Huấn luyện 4 thuật toán ML & đánh giá chỉ số
+├── outputs/                 # Lưu biểu đồ (.png) và bảng kết quả (.csv, .tex cho LaTeX)
+├── main.py                  # Script chính gọi liên hoàn từ A đến Z
+├── app.py                   # Giao diện Web GUI bằng Streamlit (điểm thưởng)
+├── requirements.txt         # Danh sách thư viện sử dụng
+└── README.md                # Báo cáo hướng dẫn chạy mã nguồn
+```
+
+---
+
+## 🔬 2. Cách hoạt động & Quy trình xử lý
+
+Dự án hoạt động theo pipeline 5 bước tuần tự. Mỗi bước được đóng gói thành một module riêng trong `src/`, được gọi liên hoàn bởi `main.py`.
+
+```mermaid
+flowchart LR
+    A["1. Nạp dữ liệu<br/>load_data.py"] --> B["2. Khám phá dữ liệu<br/>eda.py"]
+    B --> C["3. Tiền xử lý<br/>preprocess.py"]
+    C --> D["4. Vector hóa<br/>vectorize.py"]
+    D --> E["5. Huấn luyện & Đánh giá<br/>train_eval.py"]
+```
+
+### Bước 1: Nạp dữ liệu (`src/load_data.py`)
+- **Nguồn dữ liệu:** Tập `UniverseTBD/arxiv-abstracts-large` (~2.29 triệu bài tóm tắt khoa học từ arXiv) được lưu sẵn trong thư mục `huggingface_cache/`.
+- **Xử lý:** Sử dụng thư viện `datasets` của Hugging Face để nạp từ cache local (không cần kết nối mạng sau lần tải đầu tiên), hỗ trợ lấy mẫu con (`sample_size`) để tiết kiệm RAM.
+- **Đầu ra:** Một `pandas.DataFrame` với các cột chính gồm `abstract` (nội dung tóm tắt) và `categories` (nhãn phân loại lĩnh vực khoa học, ví dụ: `hep-ph`, `astro-ph`, `quant-ph`).
+
+### Bước 2: Khám phá dữ liệu — EDA (`src/eda.py`)
+- **Thống kê:** Đếm tổng số mẫu, tính phân phối độ dài văn bản theo số từ (min, max, mean, std), và đếm tần suất xuất hiện của từng nhãn.
+- **Trực quan hóa:** Vẽ biểu đồ cột (Bar Chart) Top 15 nhãn phổ biến nhất bằng `seaborn`/`matplotlib` → Lưu tự động ra `outputs/label_distribution.png` (300 DPI, sẵn sàng chèn vào báo cáo LaTeX).
+
+### Bước 3: Tiền xử lý văn bản (`src/preprocess.py`)
+Quy trình làm sạch mỗi văn bản qua 2 giai đoạn nối tiếp:
+
+1. **`clean_text(text)`** — Chuẩn hóa văn bản thô:
+   - Loại bỏ toàn bộ thẻ HTML (`<tag>...</tag>`)
+   - Chuyển toàn bộ ký tự về chữ thường
+   - Xóa chữ số, ký tự đặc biệt, dấu câu
+   - Chuẩn hóa khoảng trắng thừa
+
+2. **`tokenize_text(text)`** — Tách từ tiếng Việt:
+   - Sử dụng `ViTokenizer` từ thư viện `pyvi` để ghép các từ ghép tiếng Việt bằng dấu gạch dưới (ví dụ: `trí tuệ nhân tạo` → `trí_tuệ nhân_tạo`)
+   - Tương thích tốt với cả văn bản tiếng Anh
+
+- **Nhãn:** Chuẩn hóa cột `categories` bằng cách lấy nhãn chính đầu tiên (ví dụ: `"math.CO cs.CG"` → `"math.CO"`).
+- **Đầu ra:** DataFrame 2 cột (`cleaned_text`, `label`) được lưu ra file `data/processed_data.csv`.
+
+### Bước 4: Vector hóa — Trích xuất đặc trưng (`src/vectorize.py`)
+Văn bản sau khi làm sạch được chuyển thành 3 bộ vector số độc lập để các thuật toán ML có thể xử lý:
+
+| Phương pháp | Thư viện | Cách hoạt động | Kích thước vector |
+|---|---|---|---|
+| **Bag-of-Words (BoW)** | `CountVectorizer` (scikit-learn) | Đếm tần suất xuất hiện của từng từ trong tập từ vựng. Vector thưa (sparse), mỗi chiều = số lần một từ xuất hiện. | tối đa 5000 chiều |
+| **TF-IDF** | `TfidfVectorizer` (scikit-learn) | Cải tiến BoW: nhân tần suất từ (TF) với nghịch đảo tần suất tài liệu (IDF) → giảm trọng số từ phổ biến, tăng trọng số từ đặc trưng. | tối đa 5000 chiều |
+| **Sentence Embeddings** | `SentenceTransformer` (sentence-transformers) | Sử dụng mô hình pre-trained đa ngôn ngữ `paraphrase-multilingual-MiniLM-L12-v2` để mã hóa toàn bộ câu thành vector dense, nắm bắt ngữ nghĩa sâu hơn. | 384 chiều |
+
+### Bước 5: Huấn luyện & Đánh giá (`src/train_eval.py`)
+
+**Phân chia dữ liệu:**
+- Lọc Top 5 nhãn phổ biến nhất để đảm bảo đủ mẫu cho phân tầng.
+- Chia Train/Test theo tỉ lệ 80/20 với `stratify` (đảm bảo tỉ lệ nhãn giữ nguyên ở cả train và test).
+
+**4 thuật toán được huấn luyện trên mỗi bộ vector (tổng cộng 12 thí nghiệm):**
+
+| Thuật toán | Mô tả ngắn | Ghi chú |
+|---|---|---|
+| **Naive Bayes** | Phân loại xác suất dựa trên định lý Bayes | `MultinomialNB` cho BoW/TF-IDF, `GaussianNB` cho Embeddings (vì Embeddings chứa giá trị âm) |
+| **Logistic Regression** | Hồi quy logistic đa lớp | `max_iter=1000` |
+| **SVM** | Máy vector hỗ trợ tuyến tính | `LinearSVC` |
+| **Random Forest** | Rừng ngẫu nhiên (tập hợp cây quyết định) | `n_estimators=100` |
+
+**Chỉ số đánh giá:** Accuracy, Precision, Recall, F1-Score (cả Macro và Weighted).
+
+**Biểu đồ đầu ra tự động:**
+- `outputs/f1_comparison.png` — Biểu đồ cột so sánh F1-Macro của 4 thuật toán × 3 bộ đặc trưng.
+- `outputs/confusion_matrix.png` — Ma trận nhầm lẫn của tổ hợp đạt F1-Macro cao nhất.
+- `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex` — Bảng kết quả dạng CSV và LaTeX.
+
+---
+
+## ⚙️ 3. Hướng dẫn Cài đặt Môi trường
+
+Khuyến nghị sử dụng Python 3.10 trở lên. Mở Terminal / PowerShell tại thư mục dự án và thực hiện:
+
+### Bước 1: Tạo và kích hoạt môi trường ảo (tùy chọn nhưng khuyến nghị)
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux / macOS
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Bước 2: Cài đặt các thư viện cần thiết
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 4. Hướng dẫn Chạy Dự án
+
+### Cách 1: Chạy toàn bộ quy trình từ A đến Z (Khuyến nghị)
+Chạy script chính để tự động thực hiện: Nạp dữ liệu $\to$ EDA $\to$ Tiền xử lý $\to$ Vector hóa $\to$ Huấn luyện & Đánh giá:
+```bash
+python main.py
+```
+Sau khi hoàn thành, toàn bộ biểu đồ và bảng kết quả sẽ được lưu vào thư mục `outputs/`:
+* `outputs/label_distribution.png`: Biểu đồ phân phối nhãn.
+* `outputs/f1_comparison.png`: Biểu đồ cột so sánh F1-Score giữa các phương pháp trích xuất đặc trưng.
+* `outputs/confusion_matrix.png`: Ma trận nhầm lẫn của mô hình đạt F1 cao nhất.
+* `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex`: Bảng kết quả sẵn sàng chèn vào báo cáo LaTeX.
+
+---
+
+### Cách 2: Khởi chạy Giao diện Web Trực quan (GUI Streamlit)
+Để tương tác trực tiếp, nhập văn bản tùy ý và dự đoán nhãn:
+```bash
+streamlit run app.py
+```
+Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http://localhost:8501`. Người dùng có thể:
+1. Lựa chọn thuật toán và phương pháp vector hóa.
+2. Nhập văn bản bất kỳ và bấm **Dự đoán nhãn (Predict)**.
+3. Xem trực quan các biểu đồ thực nghiệm (EDA, F1-Score, Confusion Matrix) ngay trên ứng dụng.
+
+---
+
+### Cách 3: Chạy độc lập từng Module con (Debug / Kiểm thử)
+* Nạp dữ liệu:
+  ```bash
+  python -m src.load_data
+  ```
+* Phân tích khám phá dữ liệu (EDA):
+  ```bash
+  python -m src.eda
+  ```
+* Tiền xử lý & tách từ tiếng Việt:
+  ```bash
+  python -m src.preprocess
+  ```
+* Trích xuất vector đặc trưng:
+  ```bash
+  python -m src.vectorize
+  ```
+* Huấn luyện & Đánh giá mô hình:
+  ```bash
+  python -m src.train_eval
+  ```
+
+---
+
+## 📊 5. Tóm tắt Kết quả Thực nghiệm
+
+Thực nghiệm so sánh 12 tổ hợp (4 thuật toán × 3 bộ đặc trưng):
+
+| Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
+|---|---|---|---|---|
+| **Embeddings** | **Logistic Regression** | **91.36%** | **0.884** | **0.910** |
+| Embeddings | SVM | 88.89% | 0.853 | 0.885 |
+| BoW | Naive Bayes | 86.42% | 0.812 | 0.862 |
+| TF-IDF | SVM | 86.42% | 0.827 | 0.860 |
+| Embeddings | Naive Bayes | 85.19% | 0.790 | 0.852 |
+| BoW | Logistic Regression | 83.95% | 0.791 | 0.840 |
+| Embeddings | Random Forest | 82.72% | 0.782 | 0.819 |
+| BoW | SVM | 79.01% | 0.743 | 0.794 |
+| BoW | Random Forest | 70.37% | 0.617 | 0.679 |
+| TF-IDF | Random Forest | 69.14% | 0.573 | 0.656 |
+| TF-IDF | Logistic Regression | 60.49% | 0.429 | 0.535 |
+| TF-IDF | Naive Bayes | 48.15% | 0.157 | 0.325 |
+
+**Nhận xét:**
+* **Sentence Embeddings** kết hợp với **Logistic Regression** đạt hiệu quả cao nhất (Accuracy: **~91.36%**, F1-Macro: **~0.884**) nhờ khả năng nắm bắt ngữ nghĩa sâu của mô hình pre-trained đa ngôn ngữ.
+* **TF-IDF** thể hiện hiệu năng tốt nhất khi kết hợp với **Linear SVM** (F1-Macro: **~0.827**), cho thấy SVM xử lý tốt dữ liệu thưa có trọng số.
+* **Bag-of-Words (BoW)** đạt kết quả tốt với **Naive Bayes** (F1-Macro: **~0.812**), phù hợp với giả định phân phối đa thức của dữ liệu đếm từ.
+
+Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
