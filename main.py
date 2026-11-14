@@ -17,7 +17,7 @@ def main():
 
     # 1. Nạp dữ liệu
     print("\n[Bước 1/5] Nạp dữ liệu từ cache Hugging Face...")
-    df_raw = load_data(sample_size=1000)
+    df_raw = load_data(sample_size=7000)
     print(f"-> Đã nạp {len(df_raw)} mẫu.")
 
     # 2. Khám phá & Trực quan hóa dữ liệu (EDA)
