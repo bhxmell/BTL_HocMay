@@ -74,7 +74,7 @@ Văn bản sau khi làm sạch được chuyển thành 3 bộ vector số độ
 ### Bước 5: Huấn luyện & Đánh giá (`src/train_eval.py`)
 
 **Phân chia dữ liệu:**
-- Lọc Top 5 nhãn phổ biến nhất để đảm bảo đủ mẫu cho phân tầng.
+- Lọc Top 12 nhãn phổ biến nhất để đảm bảo đủ mẫu cho phân tầng.
 - Chia Train/Test theo tỉ lệ 80/20 với `stratify` (đảm bảo tỉ lệ nhãn giữ nguyên ở cả train và test).
 
 **7 thuật toán được huấn luyện trên mỗi bộ vector (tổng cộng 21 thí nghiệm):**
@@ -177,37 +177,36 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ## 📊 5. Tóm tắt Kết quả Thực nghiệm
 
-Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) được sắp xếp theo F1-Macro giảm dần:
+Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **12 lớp chủ đề bài báo**, được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
 |---|---|---|---|---|
-| **Embeddings** | **Logistic Regression** | **91.36%** | **0.884** | **0.910** |
-| **Embeddings** | **KNN** | **87.65%** | **0.836** | **0.868** |
-| **Embeddings** | **MLP (Neural Net)** | **90.12%** | **0.866** | **0.900** |
-| Embeddings | SVM | 88.89% | 0.853 | 0.885 |
-| TF-IDF | SVM | 86.42% | 0.827 | 0.860 |
-| BoW | MLP (Neural Net) | 86.42% | 0.819 | 0.862 |
-| BoW | Naive Bayes | 86.42% | 0.812 | 0.862 |
-| TF-IDF | MLP (Neural Net) | 85.19% | 0.802 | 0.849 |
-| BoW | Logistic Regression | 83.95% | 0.791 | 0.840 |
-| Embeddings | Naive Bayes | 85.19% | 0.790 | 0.852 |
-| Embeddings | Random Forest | 82.72% | 0.782 | 0.819 |
-| TF-IDF | KNN | 81.48% | 0.761 | 0.805 |
-| BoW | SVM | 79.01% | 0.743 | 0.794 |
-| BoW | Random Forest | 70.37% | 0.617 | 0.679 |
-| TF-IDF | Random Forest | 69.14% | 0.573 | 0.656 |
-| Embeddings | Decision Tree | 61.73% | 0.417 | 0.598 |
-| TF-IDF | Logistic Regression | 60.49% | 0.429 | 0.535 |
-| TF-IDF | Decision Tree | 60.49% | 0.450 | 0.607 |
-| BoW | Decision Tree | 58.02% | 0.413 | 0.557 |
-| TF-IDF | Naive Bayes | 48.15% | 0.157 | 0.325 |
-| BoW | KNN | 44.44% | 0.303 | 0.457 |
+| **Embeddings** | **Logistic Regression** | **78.51%** | **0.724** | **0.782** |
+| **Embeddings** | **MLP (Neural Net)** | **77.69%** | **0.708** | **0.772** |
+| **Embeddings** | **SVM** | **74.38%** | **0.681** | **0.740** |
+| Embeddings | Naive Bayes | 73.55% | 0.678 | 0.736 |
+| TF-IDF | SVM | 71.07% | 0.581 | 0.680 |
+| TF-IDF | MLP (Neural Net) | 71.90% | 0.548 | 0.685 |
+| TF-IDF | KNN | 62.81% | 0.513 | 0.607 |
+| BoW | MLP (Neural Net) | 69.42% | 0.504 | 0.653 |
+| Embeddings | KNN | 66.94% | 0.498 | 0.643 |
+| BoW | SVM | 59.50% | 0.481 | 0.587 |
+| BoW | Logistic Regression | 59.50% | 0.429 | 0.581 |
+| BoW | Naive Bayes | 65.29% | 0.416 | 0.593 |
+| BoW | Decision Tree | 47.93% | 0.353 | 0.474 |
+| Embeddings | Random Forest | 56.20% | 0.336 | 0.500 |
+| BoW | Random Forest | 53.72% | 0.319 | 0.456 |
+| Embeddings | Decision Tree | 47.11% | 0.301 | 0.451 |
+| TF-IDF | Decision Tree | 45.45% | 0.288 | 0.447 |
+| TF-IDF | Random Forest | 49.59% | 0.240 | 0.401 |
+| TF-IDF | Logistic Regression | 46.28% | 0.212 | 0.366 |
+| BoW | KNN | 33.88% | 0.174 | 0.312 |
+| TF-IDF | Naive Bayes | 31.40% | 0.040 | 0.150 |
 
 **Nhận xét:**
-* **Sentence Embeddings** kết hợp với **Logistic Regression** và **MLP (Mạng nơ-ron)** đạt hiệu quả dẫn đầu (Accuracy: **~90–91.36%**, F1-Macro: **~0.865–0.884**).
-* **KNN** khi dùng khoảng cách Cosine trên Sentence Embeddings đạt F1-Macro rất ấn tượng (**~0.836**), vượt trội so với khi dùng trên BoW/TF-IDF.
-* **Random Forest** (F1 ~0.617–0.782) vượt trội rõ rệt so với **Decision Tree đơn** (F1 ~0.413–0.450), minh chứng tính hiệu quả của phương pháp Ensemble Learning (kết hợp nhiều cây).
-* **Linear SVM** đạt hiệu năng xuất sắc trên TF-IDF (F1-Macro: **~0.827**).
+* Khi mở rộng lên **12 chủ đề bài báo** (bài toán phân loại 12 lớp phức tạp hơn nhiều so với 5 lớp), **Sentence Embeddings** chứng minh ưu thế tuyệt đối khi chiếm trọn Top 4 vị trí dẫn đầu, với **Logistic Regression** (Accuracy: **78.51%**, F1-Macro: **0.724**) và **MLP** (Accuracy: **77.69%**, F1-Macro: **0.708**).
+* **TF-IDF + Linear SVM** vẫn là sự kết hợp truyền thống mạnh nhất (Accuracy: **71.07%**, F1-Macro: **0.581**).
+* Ma trận nhầm lẫn (Confusion Matrix 12×12) thể hiện rõ khả năng phân tách rất tốt của các nhãn `astro-ph`, `quant-ph`, `gr-qc`, `math.PR`.
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
 

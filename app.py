@@ -31,7 +31,7 @@ def load_and_train_models():
     else:
         df = pd.read_csv(DATA_PATH)
 
-    top_labels = df["label"].value_counts().nlargest(5).index
+    top_labels = df["label"].value_counts().nlargest(12).index
     df_filtered = df[df["label"].isin(top_labels)].copy().reset_index(drop=True)
     texts = df_filtered["cleaned_text"].astype(str).tolist()
     y = np.array(df_filtered["label"].tolist())

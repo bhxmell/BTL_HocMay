@@ -30,7 +30,7 @@ def get_models(feature_type: str):
         "MLP (Neural Net)": MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42),
     }
 
-def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 0.2):
+def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float = 0.2):
     """Huấn luyện và đánh giá 7 mô hình trên 3 bộ vector đặc trưng (BoW, TF-IDF, Embeddings)."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -118,7 +118,7 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 
 
     # 4. Vẽ Confusion Matrix cho mô hình tốt nhất
     if best_cm_info:
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(10, 8))
         sns.heatmap(
             best_cm_info["cm"],
             annot=True,
@@ -130,6 +130,8 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 5, test_size: float = 
         plt.title(best_cm_info["title"])
         plt.xlabel("Dự đoán (Predicted)")
         plt.ylabel("Thực tế (Actual)")
+        plt.xticks(rotation=45, ha="right")
+        plt.yticks(rotation=0)
         plt.tight_layout()
         cm_plot_path = OUTPUT_DIR / "confusion_matrix.png"
         plt.savefig(cm_plot_path, dpi=300)
@@ -148,6 +150,6 @@ if __name__ == "__main__":
     else:
         df = pd.read_csv(data_path)
 
-    results = run_experiment(df, top_k_classes=5)
+    results = run_experiment(df, top_k_classes=12)
     print("\nKết quả đánh giá tổng quan:")
     print(results[["Feature", "Model", "Accuracy", "F1_Macro", "F1_Weighted"]].to_string())
