@@ -12,7 +12,7 @@ from src.train_eval import run_experiment
 
 def main():
     print("=" * 60)
-    print("QUY TRÌNH HỌC MÁY PHÂN LOẠI VĂN BẢN TỪ A ĐẾN Z")
+    print("QUY TRÌNH HỌC MÁY PHÂN LOẠI CHỦ ĐỀ BÀI BÁO TỪ A ĐẾN Z")
     print("=" * 60)
 
     # 1. Nạp dữ liệu

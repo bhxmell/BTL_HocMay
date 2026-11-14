@@ -1,7 +1,7 @@
 # BÀI TẬP LỚN MÔN HỌC MÁY (MACHINE LEARNING)
-## Đề tài: Phân loại Văn bản Khoa học với các kỹ thuật Trích xuất Đặc trưng và Học máy
+## Đề tài: Phân loại chủ đề bài báo
 
-Dự án triển khai quy trình hoàn chỉnh từ thu thập, khám phá dữ liệu (EDA), tiền xử lý văn bản tiếng Việt & tiếng Anh, trích xuất đặc trưng đa dạng (BoW, TF-IDF, Sentence Embeddings), đến huấn luyện và so sánh hiệu năng của 4 giải thuật Machine Learning (Naive Bayes, Logistic Regression, SVM, Random Forest). Dự án có kèm giao diện trực quan xây dựng bằng Streamlit.
+Dự án triển khai quy trình hoàn chỉnh từ thu thập, khám phá dữ liệu (EDA), tiền xử lý văn bản tiếng Việt & tiếng Anh, trích xuất đặc trưng đa dạng (BoW, TF-IDF, Sentence Embeddings), đến huấn luyện và so sánh hiệu năng của 7 giải thuật Machine Learning (Naive Bayes, Logistic Regression, SVM, Decision Tree, Random Forest, KNN, MLP). Dự án có kèm giao diện trực quan xây dựng bằng Streamlit.
 
 ---
 

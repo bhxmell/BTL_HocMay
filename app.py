@@ -14,7 +14,7 @@ from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 
 # Cấu hình trang
-st.set_page_config(page_title="Phân loại Văn bản ML", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Phân loại Chủ đề Bài báo ML", page_icon="📝", layout="centered")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_PATH = BASE_DIR / "data" / "processed_data.csv"
@@ -59,8 +59,8 @@ def load_and_train_models():
     }
 
 def main():
-    st.title("Phân loại Văn bản Tự động")
-    st.write("Ứng dụng học máy phân loại văn bản khoa học với 7 thuật toán đa dạng.")
+    st.title("Phân loại Chủ đề Bài báo")
+    st.write("Ứng dụng học máy phân loại chủ đề bài báo với 7 thuật toán đa dạng.")
 
     models_dict = load_and_train_models()
 
