@@ -252,7 +252,7 @@ if __name__ == "__main__":
     if not data_path.exists():
         from src.load_data import load_data
         from src.preprocess import preprocess_dataset
-        df = load_data(sample_size=1000)
+        df = load_data(sample_size=7000)
         df = preprocess_dataset(df)
     else:
         df = pd.read_csv(data_path)

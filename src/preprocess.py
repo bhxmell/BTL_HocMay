@@ -48,6 +48,6 @@ if __name__ == "__main__":
 
     # 2. Xử lý mẫu từ dữ liệu thực tế
     from src.load_data import load_data
-    df = load_data(sample_size=1000)
+    df = load_data(sample_size=7000)
     df_clean = preprocess_dataset(df)
     assert (DATA_DIR / "processed_data.csv").exists()
