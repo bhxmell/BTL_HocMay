@@ -111,6 +111,7 @@ def main():
             "Biểu đồ so sánh F1-Score (7 thuật toán)",
             "Ma trận nhầm lẫn (Confusion Matrix)",
             "Phân cụm 2D không gian đặc trưng (PCA & t-SNE)",
+            "Phân cụm K-Means không giám sát (12 cụm)",
             "Phân phối nhãn (EDA)"
         ]
     )
@@ -119,6 +120,7 @@ def main():
         "Biểu đồ so sánh F1-Score (7 thuật toán)": OUTPUT_DIR / "f1_comparison.png",
         "Ma trận nhầm lẫn (Confusion Matrix)": OUTPUT_DIR / "confusion_matrix.png",
         "Phân cụm 2D không gian đặc trưng (PCA & t-SNE)": OUTPUT_DIR / "clusters_2d.png",
+        "Phân cụm K-Means không giám sát (12 cụm)": OUTPUT_DIR / "kmeans_clustering.png",
         "Phân phối nhãn (EDA)": OUTPUT_DIR / "label_distribution.png",
     }
     target_img = file_map[chart_choice]

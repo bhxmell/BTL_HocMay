@@ -29,14 +29,16 @@ def main():
     df_clean = preprocess_dataset(df_raw)
 
     # 4 & 5. Vector hóa (BoW, TF-IDF, Embeddings) và Huấn luyện & Đánh giá mô hình
-    print("\n[Bước 4 & 5] Vector hóa dữ liệu, huấn luyện 7 thuật toán ML và đánh giá trên 12 nhãn...")
-    results = run_experiment(df_clean, top_k_classes=12)
+    print("\n[Bước 4 & 5] Vector hóa dữ liệu, huấn luyện 7 thuật toán Học có giám sát & Phân cụm K-Means không giám sát...")
+    results, df_kmeans = run_experiment(df_clean, top_k_classes=12)
 
     print("\n" + "=" * 60)
     print("HOÀN THÀNH TOÀN BỘ QUY TRÌNH!")
     print("=" * 60)
-    print("Bảng tóm tắt kết quả:")
+    print("1. Bảng tóm tắt kết quả Học có giám sát (Supervised):")
     print(results[["Feature", "Model", "Accuracy", "F1_Macro", "F1_Weighted"]].to_string())
+    print("\n2. Bảng tóm tắt kết quả Phân cụm K-Means không giám sát (Unsupervised):")
+    print(df_kmeans.to_string())
 
 if __name__ == "__main__":
     main()

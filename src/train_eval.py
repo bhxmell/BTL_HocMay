@@ -3,11 +3,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.manifold import TSNE
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import (
+    accuracy_score,
+    adjusted_rand_score,
+    confusion_matrix,
+    normalized_mutual_info_score,
+    precision_recall_fscore_support,
+    silhouette_score,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
@@ -64,6 +72,51 @@ def plot_clusters_2d(X, y, output_filename: str = "clusters_2d.png"):
     plt.close()
     print(f"Đã lưu biểu đồ phân cụm 2D (PCA & t-SNE) tại: {out_path}")
 
+def run_kmeans_clustering(feature_dict, y, n_clusters=12):
+    """Thực nghiệm phân cụm học không giám sát bằng K-Means trên 3 bộ đặc trưng."""
+    kmeans_results = []
+    for feat_name, X in feature_dict.items():
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        cluster_labels = kmeans.fit_predict(X)
+
+        sil = silhouette_score(X, cluster_labels)
+        ari = adjusted_rand_score(y, cluster_labels)
+        nmi = normalized_mutual_info_score(y, cluster_labels)
+
+        kmeans_results.append({
+            "Feature": feat_name,
+            "Clusters": n_clusters,
+            "Silhouette_Score": sil,
+            "Adjusted_Rand_Index": ari,
+            "Normalized_Mutual_Info": nmi,
+        })
+
+    df_kmeans = pd.DataFrame(kmeans_results)
+    csv_path = OUTPUT_DIR / "kmeans_results.csv"
+    df_kmeans.to_csv(csv_path, index=False)
+    tex_path = OUTPUT_DIR / "kmeans_table.tex"
+    df_kmeans.to_latex(tex_path, index=False, float_format="%.4f")
+    print(f"Đã lưu kết quả K-Means tại: {csv_path} và {tex_path}")
+
+    # Vẽ biểu đồ so sánh các chỉ số phân cụm K-Means
+    plt.figure(figsize=(9, 5))
+    df_melt = df_kmeans.melt(
+        id_vars=["Feature", "Clusters"],
+        value_vars=["Silhouette_Score", "Adjusted_Rand_Index", "Normalized_Mutual_Info"],
+        var_name="Metric",
+        value_name="Score"
+    )
+    sns.barplot(data=df_melt, x="Feature", y="Score", hue="Metric", palette="Set1")
+    plt.title(f"Đánh giá thuật toán phân cụm không giám sát K-Means ({n_clusters} cụm)", fontsize=12, fontweight="bold")
+    plt.ylabel("Điểm đánh giá (Score)")
+    plt.grid(axis="y", linestyle="--", alpha=0.6)
+    plt.tight_layout()
+    plot_path = OUTPUT_DIR / "kmeans_clustering.png"
+    plt.savefig(plot_path, dpi=300)
+    plt.close()
+    print(f"Đã lưu biểu đồ K-Means: {plot_path}")
+    return df_kmeans
+
 def get_models(feature_type: str):
     """Khởi tạo danh sách 7 thuật toán ML (chọn Naive Bayes phù hợp cho từng loại đặc trưng)."""
     nb_model = GaussianNB() if feature_type == "Embeddings" else MultinomialNB()
@@ -103,6 +156,10 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float =
         "TF-IDF": X_tfidf,
         "Embeddings": X_emb,
     }
+
+    # 3. Phân cụm học không giám sát K-Means
+    print(f"\nĐang thực hiện phân cụm học không giám sát K-Means ({top_k_classes} cụm)...")
+    df_kmeans = run_kmeans_clustering(feature_dict, y, n_clusters=top_k_classes)
 
     results = []
     best_f1 = -1.0
@@ -188,7 +245,7 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float =
         plt.close()
         print(f"Đã lưu Confusion Matrix: {cm_plot_path}")
 
-    return results_df
+    return results_df, df_kmeans
 
 if __name__ == "__main__":
     data_path = Path(__file__).resolve().parent.parent / "data" / "processed_data.csv"
@@ -200,6 +257,8 @@ if __name__ == "__main__":
     else:
         df = pd.read_csv(data_path)
 
-    results = run_experiment(df, top_k_classes=12)
-    print("\nKết quả đánh giá tổng quan:")
+    results, df_kmeans = run_experiment(df, top_k_classes=12)
+    print("\nKết quả Học có giám sát (7 thuật toán ML):")
     print(results[["Feature", "Model", "Accuracy", "F1_Macro", "F1_Weighted"]].to_string())
+    print("\nKết quả Học không giám sát K-Means Clustering:")
+    print(df_kmeans.to_string())

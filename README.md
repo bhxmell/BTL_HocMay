@@ -1,7 +1,10 @@
 # BÀI TẬP LỚN MÔN HỌC MÁY (MACHINE LEARNING)
 ## Đề tài: Phân loại chủ đề bài báo
 
-Dự án triển khai quy trình hoàn chỉnh từ thu thập, khám phá dữ liệu (EDA), tiền xử lý văn bản tiếng Việt & tiếng Anh, trích xuất đặc trưng đa dạng (BoW, TF-IDF, Sentence Embeddings), đến huấn luyện và so sánh hiệu năng của 7 giải thuật Machine Learning (Naive Bayes, Logistic Regression, SVM, Decision Tree, Random Forest, KNN, MLP). Dự án có kèm giao diện trực quan xây dựng bằng Streamlit.
+Dự án triển khai quy trình hoàn chỉnh từ thu thập, khám phá dữ liệu (EDA), tiền xử lý văn bản tiếng Việt & tiếng Anh, trích xuất đặc trưng đa dạng (BoW, TF-IDF, Sentence Embeddings), đến huấn luyện và so sánh:
+- **Học có giám sát (Supervised Learning):** 7 giải thuật Machine Learning (Naive Bayes, Logistic Regression, SVM, Decision Tree, Random Forest, KNN, MLP).
+- **Học không giám sát (Unsupervised Learning):** Phân cụm K-Means Clustering trên 12 cụm chủ đề, đánh giá bằng Silhouette Score, Adjusted Rand Index (ARI) và Normalized Mutual Information (NMI).
+Dự án có kèm giao diện trực quan xây dựng bằng Streamlit.
 
 ---
 
@@ -15,7 +18,7 @@ BTL_HocMay/
 │   ├── eda.py               # Khám phá dữ liệu & xuất biểu đồ phân phối nhãn
 │   ├── preprocess.py        # Làm sạch văn bản & tách từ tiếng Việt (pyvi)
 │   ├── vectorize.py         # Trích xuất đặc trưng (BoW, TF-IDF kết hợp N-gram + Stopwords, Sentence Embeddings)
-│   └── train_eval.py        # Huấn luyện 7 thuật toán ML, vẽ biểu đồ 2D PCA/t-SNE & đánh giá chỉ số
+│   └── train_eval.py        # Huấn luyện 7 thuật toán có giám sát, phân cụm K-Means, vẽ biểu đồ 2D PCA/t-SNE & đánh giá chỉ số
 ├── outputs/                 # Lưu biểu đồ (.png) và bảng kết quả (.csv, .tex cho LaTeX)
 ├── main.py                  # Script chính gọi liên hoàn từ A đến Z
 ├── app.py                   # Giao diện Web GUI bằng Streamlit (điểm thưởng)
@@ -89,13 +92,17 @@ Văn bản sau khi làm sạch được chuyển thành 3 bộ vector số độ
 | **KNN** | Thuật toán láng giềng gần nhất | `n_neighbors=5`, khoảng cách cosine cho Embeddings |
 | **MLP (Neural Net)** | Mạng nơ-ron nhân tạo đa tầng | 2 ẩn tầng `(128, 64)`, tối ưu bằng Adam |
 
-**Chỉ số đánh giá:** Accuracy, Precision, Recall, F1-Score (cả Macro và Weighted).
+**Chỉ số đánh giá:**
+- **Học có giám sát:** Accuracy, Precision, Recall, F1-Score (cả Macro và Weighted).
+- **Học không giám sát (K-Means):** Silhouette Score (đo độ kết cụm nội tại), Adjusted Rand Index - ARI (đo mức độ tương đồng phân cụm với nhãn thực tế), Normalized Mutual Information - NMI (đo lượng thông tin chia sẻ giữa các cụm và các nhãn).
 
-**Biểu đồ đầu ra tự động:**
+**Biểu đồ và bảng đầu ra tự động:**
 - `outputs/f1_comparison.png` — Biểu đồ cột so sánh F1-Macro của 7 thuật toán × 3 bộ đặc trưng.
 - `outputs/confusion_matrix.png` — Ma trận nhầm lẫn ($12 \times 12$) của mô hình đạt F1-Macro cao nhất.
 - `outputs/clusters_2d.png` — Biểu đồ phân cụm không gian 2D (PCA & t-SNE) của 12 lớp chủ đề bài báo.
-- `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex` — Bảng kết quả dạng CSV và LaTeX.
+- `outputs/kmeans_clustering.png` — Biểu đồ cột so sánh chất lượng phân cụm K-Means (Silhouette, ARI, NMI) giữa 3 phương pháp đặc trưng.
+- `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex` — Bảng kết quả phân loại có giám sát dạng CSV và LaTeX.
+- `outputs/kmeans_results.csv` & `outputs/kmeans_table.tex` — Bảng kết quả phân cụm K-Means dạng CSV và LaTeX.
 
 ---
 
@@ -123,6 +130,8 @@ pip install -r requirements.txt
 
 ## 🚀 4. Hướng dẫn Chạy Dự án
 
+python -m streamlit run app.py
+
 ### Cách 1: Chạy toàn bộ quy trình từ A đến Z (Khuyến nghị)
 Chạy script chính để tự động thực hiện: Nạp dữ liệu $\to$ EDA $\to$ Tiền xử lý $\to$ Vector hóa $\to$ Huấn luyện & Đánh giá:
 ```bash
@@ -133,7 +142,9 @@ Sau khi hoàn thành, toàn bộ biểu đồ và bảng kết quả sẽ đư�
 * `outputs/f1_comparison.png`: Biểu đồ cột so sánh F1-Score giữa các phương pháp trích xuất đặc trưng.
 * `outputs/confusion_matrix.png`: Ma trận nhầm lẫn của mô hình đạt F1 cao nhất.
 * `outputs/clusters_2d.png`: Biểu đồ phân cụm không gian đặc trưng 2D bằng PCA và t-SNE.
-* `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex`: Bảng kết quả sẵn sàng chèn vào báo cáo LaTeX.
+* `outputs/kmeans_clustering.png`: Biểu đồ so sánh phân cụm K-Means không giám sát (Silhouette, ARI, NMI).
+* `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex`: Bảng kết quả phân loại có giám sát (CSV & LaTeX).
+* `outputs/kmeans_results.csv` & `outputs/kmeans_table.tex`: Bảng kết quả phân cụm K-Means không giám sát (CSV & LaTeX).
 
 ---
 
@@ -175,6 +186,8 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ## 📊 5. Tóm tắt Kết quả Thực nghiệm
 
+### 5.1. Học có giám sát (Supervised Learning - 7 thuật toán)
+
 Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **12 lớp chủ đề bài báo** (sau khi tích hợp **N-gram (1, 2) + lọc Stopwords**), được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
@@ -201,13 +214,30 @@ Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng)
 | BoW | KNN | 39.67% | 0.141 | 0.285 |
 | TF-IDF | Naive Bayes | 40.50% | 0.156 | 0.299 |
 
-**Nhận xét:**
+**Nhận xét mô hình có giám sát:**
 * **Hiệu quả rõ rệt của N-gram (1, 2) và Stopwords:** Việc lọc từ dừng và giữ lại các cụm từ ghép chuyên ngành (bi-grams như `quantum computing`, `machine learning`) đã giúp **BoW + Naive Bayes** tăng vọt F1-Macro từ **0.416 $\to$ 0.664** (+24.8%) và **TF-IDF + KNN** tăng từ **0.513 $\to$ 0.657** (+14.4%).
-* **Sentence Embeddings** vẫn duy trì phong độ vượt trội, chiếm trọn 4 vị trí dẫn đầu, tiêu biểu là **Logistic Regression** (Accuracy: **78.51%**, F1-Macro: **0.724**) và **MLP (Mạng nơ-ron)** (Accuracy: **77.69%**, F1-Macro: **0.708**).
+* **Sentence Embeddings** duy trì phong độ vượt trội, chiếm trọn 4 vị trí dẫn đầu, tiêu biểu là **Logistic Regression** (Accuracy: **78.51%**, F1-Macro: **0.724**) và **MLP (Mạng nơ-ron)** (Accuracy: **77.69%**, F1-Macro: **0.708**).
 * **Trực quan hóa không gian 2D (PCA & t-SNE):** Biểu đồ `outputs/clusters_2d.png` thể hiện sự tách cụm rất tự nhiên giữa các ngành toán học (`math.PR`), thiên văn học (`astro-ph`) và vật lý lượng tử (`quant-ph`).
 * **Ma trận nhầm lẫn ($12 \times 12$):** Phân tích chi tiết tại `outputs/confusion_matrix.png` cho thấy mô hình nhận diện chính xác gần như tuyệt đối nhóm chủ đề vũ trụ học và thiên văn.
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
+
+---
+
+### 5.2. Học không giám sát (Unsupervised Learning - Phân cụm K-Means)
+
+Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập trên 3 không gian biểu diễn đặc trưng (BoW, TF-IDF, Embeddings) mà hoàn toàn **không sử dụng nhãn lớp khi gom cụm**:
+
+| Bộ đặc trưng | Số cụm ($k$) | Silhouette Score | Adjusted Rand Index (ARI) | Normalized Mutual Info (NMI) |
+|---|:---:|:---:|:---:|:---:|
+| **Embeddings** | 12 | 0.0278 | **0.2281** | **0.4333** |
+| **TF-IDF** | 12 | 0.0030 | 0.1343 | 0.2501 |
+| **BoW** | 12 | **0.1465** | -0.0144 | 0.2088 |
+
+**Nhận xét phân cụm K-Means:**
+* **Sentence Embeddings phản ánh cấu trúc ngữ nghĩa vượt trội:** Chỉ số **NMI đạt 0.4333** và **ARI đạt 0.2281** — cao vượt bậc so với BoW và TF-IDF. Điều này chứng minh rằng dù không được cung cấp nhãn huấn luyện, thuật toán K-Means trên không gian ngữ nghĩa dày đặc (Dense Embeddings) vẫn tự động gom các bài báo cùng chuyên ngành vào chung một cụm với độ tương đồng rất cao so với phân loại thực tế của con người.
+* **Đặc tính của BoW và TF-IDF trong không gian nhiều chiều:** BoW có Silhouette Score cao hơn (0.1465) do không gian cực kỳ thưa (sparse) làm khoảng cách Euclidean bị méo mó, dẫn đến ARI âm (-0.0144), tức phân cụm hình thành không ăn khớp với chủ đề bài báo thực tế.
+* Biểu đồ trực quan hóa chất lượng phân cụm được lưu tại `outputs/kmeans_clustering.png` và bảng kết quả LaTeX tại `outputs/kmeans_table.tex`.
 
 ---
 
