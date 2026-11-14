@@ -107,12 +107,18 @@ def main():
     st.subheader("📊 Xem biểu đồ kết quả thực nghiệm")
     chart_choice = st.selectbox(
         "Chọn biểu đồ muốn xem:",
-        ["Biểu đồ so sánh F1-Score (7 thuật toán)", "Ma trận nhầm lẫn (Confusion Matrix)", "Phân phối nhãn (EDA)"]
+        [
+            "Biểu đồ so sánh F1-Score (7 thuật toán)",
+            "Ma trận nhầm lẫn (Confusion Matrix)",
+            "Phân cụm 2D không gian đặc trưng (PCA & t-SNE)",
+            "Phân phối nhãn (EDA)"
+        ]
     )
 
     file_map = {
         "Biểu đồ so sánh F1-Score (7 thuật toán)": OUTPUT_DIR / "f1_comparison.png",
         "Ma trận nhầm lẫn (Confusion Matrix)": OUTPUT_DIR / "confusion_matrix.png",
+        "Phân cụm 2D không gian đặc trưng (PCA & t-SNE)": OUTPUT_DIR / "clusters_2d.png",
         "Phân phối nhãn (EDA)": OUTPUT_DIR / "label_distribution.png",
     }
     target_img = file_map[chart_choice]

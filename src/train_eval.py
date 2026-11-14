@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.manifold import TSNE
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
@@ -16,6 +18,51 @@ from sklearn.tree import DecisionTreeClassifier
 from src.vectorize import extract_bow, extract_tfidf, extract_embeddings
 
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "outputs"
+
+def plot_clusters_2d(X, y, output_filename: str = "clusters_2d.png"):
+    """Chiếu vector Embeddings xuống không gian 2D bằng PCA và t-SNE để trực quan hóa cụm."""
+    pca = PCA(n_components=2, random_state=42)
+    X_pca = pca.fit_transform(X)
+
+    tsne = TSNE(n_components=2, random_state=42, perplexity=30, max_iter=1000)
+    X_tsne = tsne.fit_transform(X)
+
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+    unique_labels = np.unique(y)
+    palette = sns.color_palette("tab20", len(unique_labels))
+
+    # 1. PCA Subplot
+    sns.scatterplot(
+        x=X_pca[:, 0], y=X_pca[:, 1], hue=y, palette=palette,
+        alpha=0.75, s=45, ax=axes[0], legend=False
+    )
+    axes[0].set_title(
+        f"Trực quan hóa PCA 2D (Tỷ lệ phương sai: {pca.explained_variance_ratio_.sum()*100:.1f}%)",
+        fontsize=12, fontweight="bold"
+    )
+    axes[0].set_xlabel("PCA Component 1")
+    axes[0].set_ylabel("PCA Component 2")
+    axes[0].grid(True, linestyle="--", alpha=0.5)
+
+    # 2. t-SNE Subplot
+    sns.scatterplot(
+        x=X_tsne[:, 0], y=X_tsne[:, 1], hue=y, palette=palette,
+        alpha=0.75, s=45, ax=axes[1]
+    )
+    axes[1].set_title(
+        "Trực quan hóa phân cụm phi tuyến tính với t-SNE",
+        fontsize=12, fontweight="bold"
+    )
+    axes[1].set_xlabel("t-SNE Dimension 1")
+    axes[1].set_ylabel("t-SNE Dimension 2")
+    axes[1].grid(True, linestyle="--", alpha=0.5)
+    axes[1].legend(bbox_to_anchor=(1.05, 1), loc="upper left", title="Chủ đề bài báo")
+
+    plt.tight_layout()
+    out_path = OUTPUT_DIR / output_filename
+    plt.savefig(out_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    print(f"Đã lưu biểu đồ phân cụm 2D (PCA & t-SNE) tại: {out_path}")
 
 def get_models(feature_type: str):
     """Khởi tạo danh sách 7 thuật toán ML (chọn Naive Bayes phù hợp cho từng loại đặc trưng)."""
@@ -47,6 +94,9 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float =
     X_bow, _ = extract_bow(texts)
     X_tfidf, _ = extract_tfidf(texts)
     X_emb, _ = extract_embeddings(texts)
+
+    # 2. Trực quan hóa phân cụm 2D (PCA & t-SNE)
+    plot_clusters_2d(X_emb, y)
 
     feature_dict = {
         "BoW": X_bow,
