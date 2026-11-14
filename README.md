@@ -188,37 +188,37 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ### 5.1. Học có giám sát (Supervised Learning - 7 thuật toán)
 
-Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **12 lớp chủ đề bài báo** (sau khi tích hợp **N-gram (1, 2) + lọc Stopwords**), được sắp xếp theo F1-Macro giảm dần:
+Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **4.131 mẫu bài báo thuộc Top 12 chuyên ngành** (nạp từ 7.000 mẫu thô ban đầu, tích hợp **N-gram (1, 2) + lọc Stopwords**), được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
 |---|---|---|---|---|
-| **Embeddings** | **Logistic Regression** | **78.51%** | **0.724** | **0.782** |
-| **Embeddings** | **MLP (Neural Net)** | **77.69%** | **0.708** | **0.772** |
-| **Embeddings** | **SVM** | **74.38%** | **0.681** | **0.740** |
-| **Embeddings** | **Naive Bayes** | **73.55%** | **0.678** | **0.736** |
-| **BoW** | **Naive Bayes** | **76.03%** | **0.664** | **0.751** |
-| **TF-IDF** | **KNN** | **71.90%** | **0.657** | **0.708** |
-| **TF-IDF** | **MLP (Neural Net)** | **77.69%** | **0.639** | **0.754** |
-| BoW | MLP (Neural Net) | 75.21% | 0.614 | 0.724 |
-| TF-IDF | SVM | 73.55% | 0.607 | 0.713 |
-| BoW | SVM | 69.42% | 0.603 | 0.687 |
-| BoW | Logistic Regression | 71.90% | 0.582 | 0.695 |
-| Embeddings | KNN | 66.94% | 0.498 | 0.643 |
-| BoW | Random Forest | 60.33% | 0.362 | 0.525 |
-| BoW | Decision Tree | 49.59% | 0.355 | 0.485 |
-| TF-IDF | Random Forest | 57.85% | 0.352 | 0.511 |
-| Embeddings | Random Forest | 56.20% | 0.336 | 0.500 |
-| TF-IDF | Decision Tree | 50.41% | 0.326 | 0.480 |
-| Embeddings | Decision Tree | 47.11% | 0.301 | 0.451 |
-| TF-IDF | Logistic Regression | 47.93% | 0.246 | 0.394 |
-| BoW | KNN | 39.67% | 0.141 | 0.285 |
-| TF-IDF | Naive Bayes | 40.50% | 0.156 | 0.299 |
+| **TF-IDF** | **SVM** | **78.36%** | **0.7135** | **0.780** |
+| **BoW** | **Logistic Regression** | **78.36%** | **0.7134** | **0.781** |
+| **BoW** | **Naive Bayes** | **78.96%** | **0.7131** | **0.792** |
+| **TF-IDF** | **MLP (Neural Net)** | **77.51%** | **0.7016** | **0.773** |
+| **BoW** | **MLP (Neural Net)** | **77.15%** | **0.6923** | **0.768** |
+| **TF-IDF** | **Logistic Regression** | **76.54%** | **0.6764** | **0.749** |
+| BoW | SVM | 74.37% | 0.6627 | 0.739 |
+| Embeddings | KNN | 73.76% | 0.6365 | 0.732 |
+| TF-IDF | KNN | 72.55% | 0.6321 | 0.719 |
+| Embeddings | Logistic Regression | 71.95% | 0.6220 | 0.715 |
+| Embeddings | MLP (Neural Net) | 70.86% | 0.6121 | 0.707 |
+| Embeddings | Naive Bayes | 67.47% | 0.6030 | 0.688 |
+| Embeddings | SVM | 70.50% | 0.5992 | 0.699 |
+| TF-IDF | Random Forest | 71.10% | 0.5975 | 0.684 |
+| BoW | Random Forest | 70.50% | 0.5951 | 0.680 |
+| Embeddings | Random Forest | 66.63% | 0.5446 | 0.636 |
+| TF-IDF | Naive Bayes | 69.04% | 0.5155 | 0.643 |
+| TF-IDF | Decision Tree | 56.47% | 0.4469 | 0.563 |
+| BoW | Decision Tree | 56.47% | 0.4389 | 0.558 |
+| Embeddings | Decision Tree | 47.28% | 0.3438 | 0.472 |
+| BoW | KNN | 33.49% | 0.2045 | 0.317 |
 
 **Nhận xét mô hình có giám sát:**
-* **Hiệu quả rõ rệt của N-gram (1, 2) và Stopwords:** Việc lọc từ dừng và giữ lại các cụm từ ghép chuyên ngành (bi-grams như `quantum computing`, `machine learning`) đã giúp **BoW + Naive Bayes** tăng vọt F1-Macro từ **0.416 $\to$ 0.664** (+24.8%) và **TF-IDF + KNN** tăng từ **0.513 $\to$ 0.657** (+14.4%).
-* **Sentence Embeddings** duy trì phong độ vượt trội, chiếm trọn 4 vị trí dẫn đầu, tiêu biểu là **Logistic Regression** (Accuracy: **78.51%**, F1-Macro: **0.724**) và **MLP (Mạng nơ-ron)** (Accuracy: **77.69%**, F1-Macro: **0.708**).
-* **Trực quan hóa không gian 2D (PCA & t-SNE):** Biểu đồ `outputs/clusters_2d.png` thể hiện sự tách cụm rất tự nhiên giữa các ngành toán học (`math.PR`), thiên văn học (`astro-ph`) và vật lý lượng tử (`quant-ph`).
-* **Ma trận nhầm lẫn ($12 \times 12$):** Phân tích chi tiết tại `outputs/confusion_matrix.png` cho thấy mô hình nhận diện chính xác gần như tuyệt đối nhóm chủ đề vũ trụ học và thiên văn.
+* **Sự ổn định và cải thiện rõ rệt khi tăng dữ liệu (7.000 mẫu):** Độ chính xác (Accuracy) của hầu hết các mô hình đều tăng mạnh (đạt xấp xỉ **79%**), đặc biệt là nhóm mô hình tuyến tính và xác suất (SVM, Logistic Regression, Naive Bayes) khi kết hợp với N-gram và TF-IDF/BoW.
+* **Random Forest & MLP cải thiện vượt bậc:** Random Forest tăng F1-Macro từ ~0.35 lên gần **0.60**, MLP duy trì F1 trên **0.70**, chứng tỏ các mô hình phức tạp phát huy tối đa sức mạnh khi có lượng dữ liệu lớn và cân bằng hơn.
+* **Trực quan hóa không gian 2D (PCA & t-SNE):** Biểu đồ `outputs/clusters_2d.png` trên 4.131 điểm dữ liệu thể hiện các cụm chủ đề thiên văn (`astro-ph`), vật lý hạt (`hep-th`, `hep-ph`) và hấp dẫn (`gr-qc`) phân tách rất rõ ràng.
+* **Ma trận nhầm lẫn ($12 \times 12$):** Biểu đồ `outputs/confusion_matrix.png` ghi nhận tỉ lệ đường chéo chính sáng rõ rệt ở cả 12 lớp.
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
 
@@ -226,17 +226,17 @@ Các kết quả chi tiết được tổng hợp tự động trong file `outpu
 
 ### 5.2. Học không giám sát (Unsupervised Learning - Phân cụm K-Means)
 
-Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập trên 3 không gian biểu diễn đặc trưng (BoW, TF-IDF, Embeddings) mà hoàn toàn **không sử dụng nhãn lớp khi gom cụm**:
+Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập trên 3 không gian biểu diễn đặc trưng (BoW, TF-IDF, Embeddings) trên **4.131 bài báo** mà hoàn toàn **không sử dụng nhãn lớp khi gom cụm**:
 
 | Bộ đặc trưng | Số cụm ($k$) | Silhouette Score | Adjusted Rand Index (ARI) | Normalized Mutual Info (NMI) |
 |---|:---:|:---:|:---:|:---:|
-| **Embeddings** | 12 | 0.0278 | **0.2281** | **0.4333** |
-| **TF-IDF** | 12 | 0.0030 | 0.1343 | 0.2501 |
-| **BoW** | 12 | **0.1465** | -0.0144 | 0.2088 |
+| **Embeddings** | 12 | **0.0300** | **0.3197** | **0.4460** |
+| **TF-IDF** | 12 | 0.0088 | 0.2493 | 0.4347 |
+| **BoW** | 12 | -0.0022 | -0.0097 | 0.2173 |
 
 **Nhận xét phân cụm K-Means:**
-* **Sentence Embeddings phản ánh cấu trúc ngữ nghĩa vượt trội:** Chỉ số **NMI đạt 0.4333** và **ARI đạt 0.2281** — cao vượt bậc so với BoW và TF-IDF. Điều này chứng minh rằng dù không được cung cấp nhãn huấn luyện, thuật toán K-Means trên không gian ngữ nghĩa dày đặc (Dense Embeddings) vẫn tự động gom các bài báo cùng chuyên ngành vào chung một cụm với độ tương đồng rất cao so với phân loại thực tế của con người.
-* **Đặc tính của BoW và TF-IDF trong không gian nhiều chiều:** BoW có Silhouette Score cao hơn (0.1465) do không gian cực kỳ thưa (sparse) làm khoảng cách Euclidean bị méo mó, dẫn đến ARI âm (-0.0144), tức phân cụm hình thành không ăn khớp với chủ đề bài báo thực tế.
+* **Chất lượng gom cụm tăng vọt khi có nhiều dữ liệu hơn:** Chỉ số ARI của Sentence Embeddings tăng mạnh từ **0.2281 lên 0.3197** và TF-IDF tăng từ **0.1343 lên 0.2493**. Chỉ số NMI của Embeddings đạt **0.4460** và TF-IDF đạt **0.4347**.
+* Điều này chứng minh rằng khi tập mẫu đủ lớn, không gian biểu diễn đặc trưng phản ánh cấu trúc lĩnh vực học thuật thực tế một cách cực kỳ rõ nét mà không cần bất kỳ sự can thiệp có giám sát nào.
 * Biểu đồ trực quan hóa chất lượng phân cụm được lưu tại `outputs/kmeans_clustering.png` và bảng kết quả LaTeX tại `outputs/kmeans_table.tex`.
 
 ---

@@ -26,7 +26,7 @@ def load_and_train_models():
     if not DATA_PATH.exists():
         from src.load_data import load_data
         from src.preprocess import preprocess_dataset
-        df = load_data(sample_size=1000)
+        df = load_data(sample_size=7000)
         df = preprocess_dataset(df)
     else:
         df = pd.read_csv(DATA_PATH)
