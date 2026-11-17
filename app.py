@@ -511,7 +511,9 @@ def main():
                 "Biểu đồ so sánh F1-Score (7 thuật toán x 3 bộ đặc trưng)",
                 "Ma trận nhầm lẫn (Confusion Matrix 12x12)",
                 "Phân cụm không gian đặc trưng 2D (PCA & t-SNE)",
+                "Phương pháp Elbow & Silhouette chọn số cụm k (K-Means)",
                 "Đánh giá Phân cụm K-Means Không giám sát (Silhouette, ARI, NMI)",
+                "Top từ khóa đặc trưng theo chuyên ngành (TF-IDF)",
                 "Phân phối số lượng nhãn bài báo (EDA)"
             ]
         )
@@ -529,9 +531,17 @@ def main():
                 OUTPUT_DIR / "clusters_2d.png",
                 "Trực quan hóa giảm chiều không gian từ 384 chiều xuống 2D thể hiện sự tách cụm tự nhiên giữa các chủ đề."
             ),
+            "Phương pháp Elbow & Silhouette chọn số cụm k (K-Means)": (
+                OUTPUT_DIR / "kmeans_elbow.png",
+                "Đường cong quán tính WCSS (Inertia) và hệ số Silhouette Score theo số cụm k chứng minh tính tối ưu khi chọn k=12."
+            ),
             "Đánh giá Phân cụm K-Means Không giám sát (Silhouette, ARI, NMI)": (
                 OUTPUT_DIR / "kmeans_clustering.png",
                 "So sánh 3 chỉ số Silhouette Score, Adjusted Rand Index (ARI), và Normalized Mutual Info (NMI) cho thuật toán K-Means."
+            ),
+            "Top từ khóa đặc trưng theo chuyên ngành (TF-IDF)": (
+                OUTPUT_DIR / "top_keywords_tfidf.png",
+                "Top các từ khóa có trọng số TF-IDF trung bình cao nhất thể hiện ngữ nghĩa chuyên sâu của từng chuyên ngành."
             ),
             "Phân phối số lượng nhãn bài báo (EDA)": (
                 OUTPUT_DIR / "label_distribution.png",

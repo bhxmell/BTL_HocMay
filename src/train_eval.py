@@ -147,6 +147,97 @@ def run_kmeans_clustering(feature_dict: dict, y: np.ndarray, n_clusters: int = 1
     print(f"Đã lưu biểu đồ K-Means: {plot_path}")
     return df_kmeans
 
+def plot_kmeans_elbow(X: np.ndarray, k_range=range(2, 17), max_samples: int = 2000):
+    """
+    Biểu đồ phương pháp Elbow (WCSS/Inertia) & Silhouette Score theo số cụm k:
+    - Tìm điểm uốn (Elbow Point) để chứng minh tính hợp lý của số cụm
+    - Đánh giá chất lượng liên kết cụm nội tại
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    n_samples = X.shape[0]
+    if n_samples > max_samples:
+        np.random.seed(42)
+        idx = np.random.choice(n_samples, size=max_samples, replace=False)
+        X_sub = X[idx]
+    else:
+        X_sub = X
+
+    inertias = []
+    silhouettes = []
+    ks = list(k_range)
+
+    for k in ks:
+        km = KMeans(n_clusters=k, random_state=42, n_init=5)
+        lbls = km.fit_predict(X_sub)
+        inertias.append(km.inertia_)
+        silhouettes.append(silhouette_score(X_sub, lbls))
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+
+    # 1. Elbow curve (Inertia)
+    axes[0].plot(ks, inertias, marker="o", color="#2563eb", linewidth=2, markersize=6)
+    axes[0].axvline(x=12, color="#dc2626", linestyle="--", alpha=0.85, label="k = 12 (Đề tài lựa chọn)")
+    axes[0].set_title("Phương pháp Elbow: Inertia (WCSS) theo số cụm k", fontsize=12, fontweight="bold")
+    axes[0].set_xlabel("Số cụm k")
+    axes[0].set_ylabel("Inertia (Tổng bình phương khoảng cách)")
+    axes[0].set_xticks(ks)
+    axes[0].grid(True, linestyle="--", alpha=0.6)
+    axes[0].legend()
+
+    # 2. Silhouette Score curve
+    axes[1].plot(ks, silhouettes, marker="s", color="#16a34a", linewidth=2, markersize=6)
+    axes[1].axvline(x=12, color="#dc2626", linestyle="--", alpha=0.85, label="k = 12 (Đề tài lựa chọn)")
+    axes[1].set_title("Hệ số Silhouette trung bình theo số cụm k", fontsize=12, fontweight="bold")
+    axes[1].set_xlabel("Số cụm k")
+    axes[1].set_ylabel("Silhouette Score")
+    axes[1].set_xticks(ks)
+    axes[1].grid(True, linestyle="--", alpha=0.6)
+    axes[1].legend()
+
+    plt.tight_layout()
+    out_path = OUTPUT_DIR / "kmeans_elbow.png"
+    plt.savefig(out_path, dpi=300)
+    plt.close()
+    print(f"Đã lưu biểu đồ Elbow K-Means tại: {out_path}")
+
+def plot_top_keywords_tfidf(X_tfidf, vectorizer, y: np.ndarray, top_n: int = 7, n_classes: int = 6):
+    """
+    Trực quan hóa Top từ khóa có trọng số TF-IDF trung bình cao nhất theo từng chuyên ngành.
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    feature_names = np.array(vectorizer.get_feature_names_out())
+
+    # Lấy top N lớp phổ biến nhất
+    unique_labels, counts = np.unique(y, return_counts=True)
+    sorted_top_labels = unique_labels[np.argsort(counts)[::-1]][:n_classes]
+
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    axes = axes.flatten()
+    colors = ["#0284c7", "#dc2626", "#7c3aed", "#2563eb", "#475569", "#16a34a"]
+
+    for i, label in enumerate(sorted_top_labels):
+        mask = (y == label)
+        mean_tfidf = np.asarray(X_tfidf[mask].mean(axis=0)).flatten()
+        top_indices = np.argsort(mean_tfidf)[::-1][:top_n]
+        top_words = feature_names[top_indices]
+        top_scores = mean_tfidf[top_indices]
+
+        ax = axes[i]
+        y_pos = np.arange(len(top_words))
+        ax.barh(y_pos, top_scores[::-1], color=colors[i % len(colors)], alpha=0.85)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(top_words[::-1], fontsize=10, fontweight="bold")
+        ax.set_title(f"Top từ khóa: {label}", fontsize=11, fontweight="bold")
+        ax.set_xlabel("TF-IDF Trung bình")
+        ax.grid(axis="x", linestyle="--", alpha=0.5)
+
+    plt.suptitle("Top Từ Khóa Đặc Trưng Nhất Theo Từng Chuyên Ngành (Trọng số TF-IDF)", fontsize=14, fontweight="bold", y=0.99)
+    plt.tight_layout()
+    out_path = OUTPUT_DIR / "top_keywords_tfidf.png"
+    plt.savefig(out_path, dpi=300)
+    plt.close()
+    print(f"Đã lưu biểu đồ Top Từ khóa TF-IDF tại: {out_path}")
+
 def get_models(feature_type: str):
     """
     Khởi tạo danh sách 7 giải thuật Machine Learning theo nguyên tắc ghép cặp chuẩn:
@@ -193,11 +284,12 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float =
     # 2. Trích xuất 3 bộ đặc trưng độc lập
     print("Đang trích xuất đặc trưng BoW, TF-IDF và Embeddings...")
     X_bow, _ = extract_bow(texts)
-    X_tfidf, _ = extract_tfidf(texts)
+    X_tfidf, tfidf_vec = extract_tfidf(texts)
     X_emb, _ = extract_embeddings(texts)
 
-    # 3. Trực quan hóa phân cụm 2D (PCA & t-SNE)
+    # 3. Trực quan hóa phân cụm 2D & Top từ khóa TF-IDF theo chuyên ngành
     plot_clusters_2d(X_emb, y)
+    plot_top_keywords_tfidf(X_tfidf, tfidf_vec, y, top_n=7, n_classes=6)
 
     feature_dict = {
         "BoW": X_bow,
@@ -205,8 +297,9 @@ def run_experiment(df: pd.DataFrame, top_k_classes: int = 12, test_size: float =
         "Embeddings": X_emb,
     }
 
-    # 4. Phân cụm học không giám sát K-Means
+    # 4. Phân cụm học không giám sát K-Means & Biểu đồ Elbow
     print(f"\nĐang thực hiện phân cụm học không giám sát K-Means ({top_k_classes} cụm)...")
+    plot_kmeans_elbow(X_emb, k_range=range(2, 17))
     df_kmeans = run_kmeans_clustering(feature_dict, y, n_clusters=top_k_classes)
 
     # 5. Huấn luyện và đánh giá các mô hình có giám sát

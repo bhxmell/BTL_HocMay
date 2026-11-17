@@ -101,7 +101,9 @@ Văn bản sau khi làm sạch được chuyển thành 3 bộ biểu diễn đ�
 - `outputs/f1_comparison.png` — Biểu đồ cột so sánh F1-Macro của 7 thuật toán × 3 bộ đặc trưng.
 - `outputs/confusion_matrix.png` — Ma trận nhầm lẫn ($12 \times 12$) của mô hình đạt F1-Macro cao nhất.
 - `outputs/clusters_2d.png` — Biểu đồ phân cụm không gian 2D (PCA & t-SNE) của 12 lớp chủ đề bài báo.
+- `outputs/kmeans_elbow.png` — Biểu đồ phương pháp Elbow (Inertia/WCSS) & Silhouette Score chứng minh số cụm $k=12$ tối ưu.
 - `outputs/kmeans_clustering.png` — Biểu đồ cột so sánh chất lượng phân cụm K-Means (Silhouette, ARI, NMI) giữa 3 phương pháp đặc trưng.
+- `outputs/top_keywords_tfidf.png` — Biểu đồ Top từ khóa đặc trưng nhất theo từng chuyên ngành khoa học qua trọng số TF-IDF.
 - `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex` — Bảng kết quả phân loại có giám sát dạng CSV và LaTeX.
 - `outputs/kmeans_results.csv` & `outputs/kmeans_table.tex` — Bảng kết quả phân cụm K-Means dạng CSV và LaTeX.
 
@@ -143,7 +145,9 @@ Sau khi hoàn thành, toàn bộ biểu đồ và bảng kết quả sẽ đư�
 * `outputs/f1_comparison.png`: Biểu đồ cột so sánh F1-Score giữa các phương pháp trích xuất đặc trưng.
 * `outputs/confusion_matrix.png`: Ma trận nhầm lẫn của mô hình đạt F1 cao nhất.
 * `outputs/clusters_2d.png`: Biểu đồ phân cụm không gian đặc trưng 2D bằng PCA và t-SNE.
+* `outputs/kmeans_elbow.png`: Biểu đồ Elbow & Silhouette Score tìm số cụm k tối ưu.
 * `outputs/kmeans_clustering.png`: Biểu đồ so sánh phân cụm K-Means không giám sát (Silhouette, ARI, NMI).
+* `outputs/top_keywords_tfidf.png`: Biểu đồ Top từ khóa đặc trưng theo chuyên ngành qua TF-IDF.
 * `outputs/evaluation_results.csv` & `outputs/evaluation_table.tex`: Bảng kết quả phân loại có giám sát (CSV & LaTeX).
 * `outputs/kmeans_results.csv` & `outputs/kmeans_table.tex`: Bảng kết quả phân cụm K-Means không giám sát (CSV & LaTeX).
 
