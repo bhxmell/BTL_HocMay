@@ -24,8 +24,8 @@ def main():
     print("\n[Bước 2/5] Khám phá dữ liệu (EDA) & xuất biểu đồ phân phối nhãn...")
     explore_data(df_raw)
 
-    # 3. Tiền xử lý & Tách từ tiếng Việt
-    print("\n[Bước 3/5] Làm sạch văn bản và tách từ...")
+    # 3. Tiền xử lý văn bản tiếng Anh (Gộp Title + Abstract, giữ chữ số)
+    print("\n[Bước 3/5] Tiền xử lý: Gộp Title + Abstract, làm sạch văn bản (giữ chữ số)...")
     df_clean = preprocess_dataset(df_raw)
 
     # 4 & 5. Vector hóa (BoW, TF-IDF, Embeddings) và Huấn luyện & Đánh giá mô hình

@@ -49,30 +49,31 @@ flowchart LR
 - **Thống kê:** Đếm tổng số mẫu, tính phân phối độ dài văn bản theo số từ (min, max, mean, std), và đếm tần suất xuất hiện của từng nhãn.
 - **Trực quan hóa:** Vẽ biểu đồ cột (Bar Chart) Top 15 nhãn phổ biến nhất bằng `seaborn`/`matplotlib` → Lưu tự động ra `outputs/label_distribution.png` (300 DPI, sẵn sàng chèn vào báo cáo LaTeX).
 
-### Bước 3: Tiền xử lý văn bản (`src/preprocess.py`)
-Quy trình làm sạch mỗi văn bản qua 2 giai đoạn nối tiếp:
+### Bước 3: Tiền xử lý văn bản tiếng Anh (`src/preprocess.py`)
+Quy trình làm sạch tối ưu cho dữ liệu học thuật arXiv:
 
-1. **`clean_text(text)`** — Chuẩn hóa văn bản thô:
-   - Loại bỏ toàn bộ thẻ HTML (`<tag>...</tag>`)
-   - Chuyển toàn bộ ký tự về chữ thường
-   - Xóa chữ số, ký tự đặc biệt, dấu câu
-   - Chuẩn hóa khoảng trắng thừa
+1. **Gộp văn bản đầu vào:**
+   - Kết hợp tiêu đề (`title`) và phần tóm tắt (`abstract`) thành một trường văn bản thống nhất:
+     $$\text{text} = \text{title} + \text{". "} + \text{abstract}$$
+   - Tiêu đề chứa các từ khóa domain quan trọng nhất, giúp tăng tín hiệu ngữ nghĩa vượt trội.
 
-2. **`tokenize_text(text)`** — Tách từ tiếng Việt:
-   - Sử dụng `ViTokenizer` từ thư viện `pyvi` để ghép các từ ghép tiếng Việt bằng dấu gạch dưới (ví dụ: `trí tuệ nhân tạo` → `trí_tuệ nhân_tạo`)
-   - Tương thích tốt với cả văn bản tiếng Anh
+2. **Hàm làm sạch chuẩn hóa `clean_text(text)`:**
+   - Loại bỏ hoàn toàn thư viện `pyvi` (do văn bản 100% tiếng Anh khoa học).
+   - Loại bỏ thẻ HTML (`<tag>...</tag>`), ký tự xuống dòng (`\n`), tab (`\t`), dấu câu và ký tự đặc biệt.
+   - Chuyển toàn bộ về chữ thường (`lowercase`) và chuẩn hóa khoảng trắng thừa.
+   - **Bảo toàn chữ số (`digits`):** Giữ lại các con số từ 0 đến 9 nhằm bảo toàn các định danh mô hình (`GPT-4`, `BERT-2`), chiều không gian (`2D`, `3D`), và các hằng số/ký hiệu vật lý.
 
-- **Nhãn:** Chuẩn hóa cột `categories` bằng cách lấy nhãn chính đầu tiên (ví dụ: `"math.CO cs.CG"` → `"math.CO"`).
-- **Đầu ra:** DataFrame 2 cột (`cleaned_text`, `label`) được lưu ra file `data/processed_data.csv`.
+- **Nhãn:** Chuẩn hóa cột `categories` bằng cách lấy nhãn chuyên ngành chính đầu tiên (ví dụ: `"math.CO cs.CG"` $\to$ `"math.CO"`).
+- **Đầu ra:** DataFrame gồm 2 cột (`cleaned_text`, `label`) được lưu ra file `data/processed_data.csv`.
 
 ### Bước 4: Vector hóa — Trích xuất đặc trưng (`src/vectorize.py`)
-Văn bản sau khi làm sạch được chuyển thành 3 bộ vector số độc lập để các thuật toán ML có thể xử lý:
+Văn bản sau khi làm sạch được chuyển thành 3 bộ biểu diễn đặc trưng độc lập với cấu hình tối ưu:
 
-| Phương pháp | Thư viện | Cách hoạt động | Kích thước vector |
+| Phương pháp | Thư viện | Cách hoạt động & Cấu hình | Kích thước vector |
 |---|---|---|---|
-| **Bag-of-Words (BoW)** | `CountVectorizer` (scikit-learn) | Đếm tần suất từ vựng kết hợp **N-gram (1, 2)** và loại bỏ **Stopwords** tiếng Anh. Vector thưa (sparse). | tối đa 5000 chiều |
-| **TF-IDF** | `TfidfVectorizer` (scikit-learn) | Trọng số TF-IDF kết hợp **N-gram (1, 2)** và loại bỏ **Stopwords**. Tăng trọng số cho cụm từ khóa chuyên môn. | tối đa 5000 chiều |
-| **Sentence Embeddings** | `SentenceTransformer` (sentence-transformers) | Mô hình pre-trained đa ngôn ngữ `paraphrase-multilingual-MiniLM-L12-v2` mã hóa toàn bộ ngữ nghĩa câu. | 384 chiều |
+| **Bag-of-Words (BoW)** | `CountVectorizer` (scikit-learn) | Đếm tần suất từ vựng kết hợp **N-gram (1, 2)**, loại bỏ từ dừng `english`, `max_features=12000`, `min_df=3`. Vector thưa (sparse). | tối đa 12.000 chiều |
+| **TF-IDF** | `TfidfVectorizer` (scikit-learn) | Trọng số TF-IDF kết hợp **N-gram (1, 2)**, loại bỏ từ dừng `english`, `max_features=12000`, `min_df=3`. Tăng trọng số từ khóa chuyên môn. | tối đa 12.000 chiều |
+| **Sentence Embeddings** | `SentenceTransformer` | Mô hình `paraphrase-multilingual-MiniLM-L12-v2`, tự động nhận diện GPU (`cuda`), `batch_size=128`. Mã hóa ngữ nghĩa toàn câu. | 384 chiều |
 
 ### Bước 5: Huấn luyện & Đánh giá (`src/train_eval.py`)
 
@@ -188,37 +189,44 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ### 5.1. Học có giám sát (Supervised Learning - 7 thuật toán)
 
-Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **4.131 mẫu bài báo thuộc Top 12 chuyên ngành** (nạp từ 7.000 mẫu thô ban đầu, tích hợp **N-gram (1, 2) + lọc Stopwords**), được sắp xếp theo F1-Macro giảm dần:
+Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **4.131 mẫu bài báo thuộc Top 12 chuyên ngành** (nạp từ 7.000 mẫu thô ban đầu, gộp **Title + Abstract**, giữ **chữ số**, cấu hình **N-gram (1, 2) + 12.000 max features**), được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
 |---|---|---|---|---|
-| **TF-IDF** | **SVM** | **78.36%** | **0.7135** | **0.780** |
-| **BoW** | **Logistic Regression** | **78.36%** | **0.7134** | **0.781** |
-| **BoW** | **Naive Bayes** | **78.96%** | **0.7131** | **0.792** |
-| **TF-IDF** | **MLP (Neural Net)** | **77.51%** | **0.7016** | **0.773** |
-| **BoW** | **MLP (Neural Net)** | **77.15%** | **0.6923** | **0.768** |
-| **TF-IDF** | **Logistic Regression** | **76.54%** | **0.6764** | **0.749** |
-| BoW | SVM | 74.37% | 0.6627 | 0.739 |
-| Embeddings | KNN | 73.76% | 0.6365 | 0.732 |
-| TF-IDF | KNN | 72.55% | 0.6321 | 0.719 |
-| Embeddings | Logistic Regression | 71.95% | 0.6220 | 0.715 |
-| Embeddings | MLP (Neural Net) | 70.86% | 0.6121 | 0.707 |
-| Embeddings | Naive Bayes | 67.47% | 0.6030 | 0.688 |
-| Embeddings | SVM | 70.50% | 0.5992 | 0.699 |
-| TF-IDF | Random Forest | 71.10% | 0.5975 | 0.684 |
-| BoW | Random Forest | 70.50% | 0.5951 | 0.680 |
-| Embeddings | Random Forest | 66.63% | 0.5446 | 0.636 |
-| TF-IDF | Naive Bayes | 69.04% | 0.5155 | 0.643 |
-| TF-IDF | Decision Tree | 56.47% | 0.4469 | 0.563 |
-| BoW | Decision Tree | 56.47% | 0.4389 | 0.558 |
-| Embeddings | Decision Tree | 47.28% | 0.3438 | 0.472 |
-| BoW | KNN | 33.49% | 0.2045 | 0.317 |
+| **TF-IDF** | **SVM** | **81.86%** | **0.7471** | **0.8147** |
+| **TF-IDF** | **MLP (Neural Net)** | **80.65%** | **0.7391** | **0.8047** |
+| **BoW** | **MLP (Neural Net)** | **80.65%** | **0.7344** | **0.8044** |
+| **BoW** | **Logistic Regression** | **79.32%** | **0.7221** | **0.7911** |
+| **BoW** | **Naive Bayes** | **80.29%** | **0.7200** | **0.8013** |
+| **BoW** | **SVM** | **78.60%** | **0.7098** | **0.7840** |
+| **TF-IDF** | **Logistic Regression** | **75.82%** | **0.6706** | **0.7413** |
+| **TF-IDF** | **KNN** | **75.09%** | **0.6677** | **0.7441** |
+| **Embeddings** | **Logistic Regression** | **73.88%** | **0.6501** | **0.7355** |
+| Embeddings | KNN | 73.64% | 0.6411 | 0.7312 |
+| Embeddings | MLP (Neural Net) | 73.16% | 0.6398 | 0.7312 |
+| Embeddings | SVM | 72.07% | 0.6277 | 0.7166 |
+| Embeddings | Naive Bayes | 68.44% | 0.6094 | 0.7003 |
+| TF-IDF | Random Forest | 70.98% | 0.6019 | 0.6826 |
+| BoW | Random Forest | 71.95% | 0.5994 | 0.6905 |
+| Embeddings | Random Forest | 66.75% | 0.5471 | 0.6382 |
+| BoW | Decision Tree | 58.04% | 0.4741 | 0.5733 |
+| TF-IDF | Decision Tree | 57.32% | 0.4488 | 0.5642 |
+| TF-IDF | Naive Bayes | 62.27% | 0.4171 | 0.5554 |
+| Embeddings | Decision Tree | 46.19% | 0.3322 | 0.4652 |
+| BoW | KNN | 30.96% | 0.2086 | 0.3280 |
 
 **Nhận xét mô hình có giám sát:**
-* **Sự ổn định và cải thiện rõ rệt khi tăng dữ liệu (7.000 mẫu):** Độ chính xác (Accuracy) của hầu hết các mô hình đều tăng mạnh (đạt xấp xỉ **79%**), đặc biệt là nhóm mô hình tuyến tính và xác suất (SVM, Logistic Regression, Naive Bayes) khi kết hợp với N-gram và TF-IDF/BoW.
-* **Random Forest & MLP cải thiện vượt bậc:** Random Forest tăng F1-Macro từ ~0.35 lên gần **0.60**, MLP duy trì F1 trên **0.70**, chứng tỏ các mô hình phức tạp phát huy tối đa sức mạnh khi có lượng dữ liệu lớn và cân bằng hơn.
-* **Trực quan hóa không gian 2D (PCA & t-SNE):** Biểu đồ `outputs/clusters_2d.png` trên 4.131 điểm dữ liệu thể hiện các cụm chủ đề thiên văn (`astro-ph`), vật lý hạt (`hep-th`, `hep-ph`) và hấp dẫn (`gr-qc`) phân tách rất rõ ràng.
-* **Ma trận nhầm lẫn ($12 \times 12$):** Biểu đồ `outputs/confusion_matrix.png` ghi nhận tỉ lệ đường chéo chính sáng rõ rệt ở cả 12 lớp.
+* **Bước nhảy vọt về hiệu năng khi gộp Title + Abstract và giữ chữ số:**
+  - Mô hình đạt đỉnh cao mới: **TF-IDF + SVM** cán mốc **Accuracy 81.86%** và **F1-Macro 0.7471** (F1-Weighted đạt **81.47%**).
+  - Cả **TF-IDF + MLP** và **BoW + MLP** đều vượt mốc **80.65%**, BoW + Naive Bayes đạt **80.29%**.
+  - Tiêu đề (Title) cung cấp các thuật ngữ cốt lõi, trong khi việc giữ chữ số (`2D`, `3D`, `GPT-4`, `TeV`) giúp các mô hình phân biệt rạch ròi các khái niệm vật lý và toán học.
+* **Nguyên tắc ghép cặp mô hình & đặc trưng chuẩn xác:**
+  - Với BoW/TF-IDF (ma trận thưa): `MultinomialNB` phát huy tối đa xác suất đếm rời rạc.
+  - Với Sentence Embeddings (ma trận dày có giá trị âm): `GaussianNB` và khoảng cách Cosine trong `KNN` hoạt động mượt mà và không gặp lỗi toán học.
+* **Biểu đồ trực quan hóa:**
+  - `outputs/f1_comparison.png`: Biểu đồ so sánh trực quan toàn diện 21 thực nghiệm.
+  - `outputs/confusion_matrix.png`: Thể hiện đường chéo chính áp đảo trên cả 12 lớp chuyên ngành.
+  - `outputs/clusters_2d.png`: Thể hiện các cụm toán học, vật lý thiên văn và vật lý hạt tách cụm rõ rệt.
 
 Các kết quả chi tiết được tổng hợp tự động trong file `outputs/evaluation_results.csv` và bảng LaTeX `outputs/evaluation_table.tex`.
 
@@ -230,13 +238,13 @@ Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập
 
 | Bộ đặc trưng | Số cụm ($k$) | Silhouette Score | Adjusted Rand Index (ARI) | Normalized Mutual Info (NMI) |
 |---|:---:|:---:|:---:|:---:|
-| **Embeddings** | 12 | **0.0300** | **0.3197** | **0.4460** |
-| **TF-IDF** | 12 | 0.0088 | 0.2493 | 0.4347 |
-| **BoW** | 12 | -0.0022 | -0.0097 | 0.2173 |
+| **TF-IDF** | 12 | 0.0075 | 0.2654 | **0.4792** |
+| **Embeddings** | 12 | **0.0325** | **0.3127** | 0.4541 |
+| **BoW** | 12 | 0.0323 | -0.0166 | 0.2352 |
 
 **Nhận xét phân cụm K-Means:**
-* **Chất lượng gom cụm tăng vọt khi có nhiều dữ liệu hơn:** Chỉ số ARI của Sentence Embeddings tăng mạnh từ **0.2281 lên 0.3197** và TF-IDF tăng từ **0.1343 lên 0.2493**. Chỉ số NMI của Embeddings đạt **0.4460** và TF-IDF đạt **0.4347**.
-* Điều này chứng minh rằng khi tập mẫu đủ lớn, không gian biểu diễn đặc trưng phản ánh cấu trúc lĩnh vực học thuật thực tế một cách cực kỳ rõ nét mà không cần bất kỳ sự can thiệp có giám sát nào.
+* **Chỉ số NMI của TF-IDF tăng vọt lên 0.4792:** Khi kết hợp Title + Abstract với 12.000 max features, không gian TF-IDF đã gom cụm các chủ đề khoa học tự nhiên một cách cực kỳ trùng khớp với nhãn chuyên môn của con người.
+* **Sentence Embeddings** duy trì ARI vượt bậc (**0.3127**) và NMI (**0.4541**), thể hiện tính toàn vẹn ngữ nghĩa cao.
 * Biểu đồ trực quan hóa chất lượng phân cụm được lưu tại `outputs/kmeans_clustering.png` và bảng kết quả LaTeX tại `outputs/kmeans_table.tex`.
 
 ---

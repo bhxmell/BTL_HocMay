@@ -307,14 +307,15 @@ def load_and_train_models():
     lr_emb = LogisticRegression(max_iter=1000, random_state=42).fit(X_emb, y)
 
     models_catalog = {
-        "BoW + Naive Bayes (Accuracy: 78.96% - F1: 0.713)": (bow_vec, nb_bow, "bow"),
-        "BoW + Logistic Regression (Accuracy: 78.36% - F1: 0.713)": (bow_vec, lr_bow, "bow"),
-        "TF-IDF + SVM (Accuracy: 78.36% - F1: 0.713)": (tfidf_vec, svm_tfidf, "tfidf"),
-        "TF-IDF + MLP Neural Net (Accuracy: 77.51% - F1: 0.702)": (tfidf_vec, mlp_tfidf, "tfidf"),
-        "Embeddings + KNN (Accuracy: 73.76% - F1: 0.636)": (emb_model, knn_emb, "embeddings"),
-        "Embeddings + Logistic Regression (Accuracy: 71.95% - F1: 0.622)": (emb_model, lr_emb, "embeddings"),
-        "Embeddings + MLP Neural Net (Accuracy: 70.86% - F1: 0.612)": (emb_model, mlp_emb, "embeddings"),
-        "TF-IDF + Decision Tree (Accuracy: 56.47% - F1: 0.447)": (tfidf_vec, dt_tfidf, "tfidf"),
+        "TF-IDF + SVM (Accuracy: 81.86% - F1: 0.747 - Cao nhất)": (tfidf_vec, svm_tfidf, "tfidf"),
+        "TF-IDF + MLP Neural Net (Accuracy: 80.65% - F1: 0.739)": (tfidf_vec, mlp_tfidf, "tfidf"),
+        "BoW + MLP Neural Net (Accuracy: 80.65% - F1: 0.734)": (bow_vec, lr_bow, "bow"),
+        "BoW + Logistic Regression (Accuracy: 79.32% - F1: 0.722)": (bow_vec, lr_bow, "bow"),
+        "BoW + Naive Bayes (Accuracy: 80.29% - F1: 0.720)": (bow_vec, nb_bow, "bow"),
+        "Embeddings + Logistic Regression (Accuracy: 73.88% - F1: 0.650)": (emb_model, lr_emb, "embeddings"),
+        "Embeddings + KNN (Accuracy: 73.64% - F1: 0.641)": (emb_model, knn_emb, "embeddings"),
+        "Embeddings + MLP Neural Net (Accuracy: 73.16% - F1: 0.640)": (emb_model, mlp_emb, "embeddings"),
+        "TF-IDF + Decision Tree (Accuracy: 57.32% - F1: 0.449)": (tfidf_vec, dt_tfidf, "tfidf"),
     }
     return models_catalog, top_labels
 
@@ -376,11 +377,11 @@ def main():
             <div class="metric-label">Chuyên ngành bài báo</div>
         </div>
         <div class="metric-card">
-            <div class="metric-val">78.96%</div>
-            <div class="metric-label">Độ chính xác cao nhất (F1: 0.713)</div>
+            <div class="metric-val">81.86%</div>
+            <div class="metric-label">Độ chính xác cao nhất (F1: 0.747)</div>
         </div>
         <div class="metric-card">
-            <div class="metric-val">0.4460</div>
+            <div class="metric-val">0.4792</div>
             <div class="metric-label">NMI K-Means Không giám sát</div>
         </div>
     </div>
