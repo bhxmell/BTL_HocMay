@@ -299,6 +299,7 @@ def load_and_train_models():
     # 2. Huấn luyện các mô hình tối ưu
     nb_bow = MultinomialNB().fit(X_bow, y)
     lr_bow = LogisticRegression(max_iter=1000, random_state=42).fit(X_bow, y)
+    mlp_bow = MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42).fit(X_bow, y)
     dt_tfidf = DecisionTreeClassifier(random_state=42).fit(X_tfidf, y)
     svm_tfidf = LinearSVC(dual="auto", random_state=42).fit(X_tfidf, y)
     mlp_tfidf = MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=500, random_state=42).fit(X_tfidf, y)
@@ -307,15 +308,15 @@ def load_and_train_models():
     lr_emb = LogisticRegression(max_iter=1000, random_state=42).fit(X_emb, y)
 
     models_catalog = {
-        "TF-IDF + SVM (Accuracy: 81.86% - F1: 0.747 - Cao nhất)": (tfidf_vec, svm_tfidf, "tfidf"),
-        "TF-IDF + MLP Neural Net (Accuracy: 80.65% - F1: 0.739)": (tfidf_vec, mlp_tfidf, "tfidf"),
-        "BoW + MLP Neural Net (Accuracy: 80.65% - F1: 0.734)": (bow_vec, lr_bow, "bow"),
-        "BoW + Logistic Regression (Accuracy: 79.32% - F1: 0.722)": (bow_vec, lr_bow, "bow"),
-        "BoW + Naive Bayes (Accuracy: 80.29% - F1: 0.720)": (bow_vec, nb_bow, "bow"),
-        "Embeddings + Logistic Regression (Accuracy: 73.88% - F1: 0.650)": (emb_model, lr_emb, "embeddings"),
-        "Embeddings + KNN (Accuracy: 73.64% - F1: 0.641)": (emb_model, knn_emb, "embeddings"),
-        "Embeddings + MLP Neural Net (Accuracy: 73.16% - F1: 0.640)": (emb_model, mlp_emb, "embeddings"),
-        "TF-IDF + Decision Tree (Accuracy: 57.32% - F1: 0.449)": (tfidf_vec, dt_tfidf, "tfidf"),
+        "TF-IDF + MLP Neural Net (Accuracy: 80.98% - F1: 0.731 - Cao nhất)": (tfidf_vec, mlp_tfidf, "tfidf"),
+        "BoW + MLP Neural Net (Accuracy: 78.95% - F1: 0.717)": (bow_vec, mlp_bow, "bow"),
+        "TF-IDF + SVM (Accuracy: 78.78% - F1: 0.714)": (tfidf_vec, svm_tfidf, "tfidf"),
+        "BoW + Naive Bayes (Accuracy: 77.25% - F1: 0.677)": (bow_vec, nb_bow, "bow"),
+        "BoW + Logistic Regression (Accuracy: 75.89% - F1: 0.680)": (bow_vec, lr_bow, "bow"),
+        "TF-IDF + KNN (Accuracy: 75.21% - F1: 0.648)": (tfidf_vec, dt_tfidf, "tfidf"),
+        "Embeddings + Logistic Regression (Accuracy: 71.48% - F1: 0.629)": (emb_model, lr_emb, "embeddings"),
+        "Embeddings + KNN (Accuracy: 68.93% - F1: 0.574)": (emb_model, knn_emb, "embeddings"),
+        "TF-IDF + Decision Tree (Accuracy: 57.73% - F1: 0.435)": (tfidf_vec, dt_tfidf, "tfidf"),
     }
     return models_catalog, top_labels
 
@@ -369,7 +370,7 @@ def main():
     st.markdown("""
     <div class="metric-grid">
         <div class="metric-card">
-            <div class="metric-val">7.000</div>
+            <div class="metric-val">5.000</div>
             <div class="metric-label">Mẫu dữ liệu thực nghiệm</div>
         </div>
         <div class="metric-card">
@@ -377,11 +378,11 @@ def main():
             <div class="metric-label">Chuyên ngành bài báo</div>
         </div>
         <div class="metric-card">
-            <div class="metric-val">81.86%</div>
-            <div class="metric-label">Độ chính xác cao nhất (F1: 0.747)</div>
+            <div class="metric-val">80.98%</div>
+            <div class="metric-label">Độ chính xác cao nhất (F1: 0.731)</div>
         </div>
         <div class="metric-card">
-            <div class="metric-val">0.4792</div>
+            <div class="metric-val">0.4434</div>
             <div class="metric-label">NMI K-Means Không giám sát</div>
         </div>
     </div>
@@ -518,7 +519,7 @@ def main():
         file_map = {
             "Biểu đồ so sánh F1-Score (7 thuật toán x 3 bộ đặc trưng)": (
                 OUTPUT_DIR / "f1_comparison.png",
-                "Biểu đồ so sánh điểm F1-Score (Macro) của 21 cấu hình thực nghiệm trên 4.131 mẫu thử nghiệm."
+                "Biểu đồ so sánh điểm F1-Score (Macro) của 21 cấu hình thực nghiệm trên 2.941 mẫu thử nghiệm."
             ),
             "Ma trận nhầm lẫn (Confusion Matrix 12x12)": (
                 OUTPUT_DIR / "confusion_matrix.png",

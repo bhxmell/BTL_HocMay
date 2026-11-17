@@ -189,36 +189,36 @@ Giao diện sẽ tự động mở tại trình duyệt theo địa chỉ `http:
 
 ### 5.1. Học có giám sát (Supervised Learning - 7 thuật toán)
 
-Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **4.131 mẫu bài báo thuộc Top 12 chuyên ngành** (nạp từ 7.000 mẫu thô ban đầu, gộp **Title + Abstract**, giữ **chữ số**, cấu hình **N-gram (1, 2) + 12.000 max features**), được sắp xếp theo F1-Macro giảm dần:
+Thực nghiệm so sánh 21 tổ hợp (7 thuật toán × 3 bộ đặc trưng) trên **2.941 mẫu bài báo thuộc Top 12 chuyên ngành** (nạp từ 5.000 mẫu thô ban đầu, gộp **Title + Abstract**, giữ **chữ số**, cấu hình **N-gram (1, 2) + 12.000 max features**), được sắp xếp theo F1-Macro giảm dần:
 
 | Bộ đặc trưng | Thuật toán | Accuracy | F1-Macro | F1-Weighted |
 |---|---|---|---|---|
-| **TF-IDF** | **SVM** | **81.86%** | **0.7471** | **0.8147** |
-| **TF-IDF** | **MLP (Neural Net)** | **80.65%** | **0.7391** | **0.8047** |
-| **BoW** | **MLP (Neural Net)** | **80.65%** | **0.7344** | **0.8044** |
-| **BoW** | **Logistic Regression** | **79.32%** | **0.7221** | **0.7911** |
-| **BoW** | **Naive Bayes** | **80.29%** | **0.7200** | **0.8013** |
-| **BoW** | **SVM** | **78.60%** | **0.7098** | **0.7840** |
-| **TF-IDF** | **Logistic Regression** | **75.82%** | **0.6706** | **0.7413** |
-| **TF-IDF** | **KNN** | **75.09%** | **0.6677** | **0.7441** |
-| **Embeddings** | **Logistic Regression** | **73.88%** | **0.6501** | **0.7355** |
-| Embeddings | KNN | 73.64% | 0.6411 | 0.7312 |
-| Embeddings | MLP (Neural Net) | 73.16% | 0.6398 | 0.7312 |
-| Embeddings | SVM | 72.07% | 0.6277 | 0.7166 |
-| Embeddings | Naive Bayes | 68.44% | 0.6094 | 0.7003 |
-| TF-IDF | Random Forest | 70.98% | 0.6019 | 0.6826 |
-| BoW | Random Forest | 71.95% | 0.5994 | 0.6905 |
-| Embeddings | Random Forest | 66.75% | 0.5471 | 0.6382 |
-| BoW | Decision Tree | 58.04% | 0.4741 | 0.5733 |
-| TF-IDF | Decision Tree | 57.32% | 0.4488 | 0.5642 |
-| TF-IDF | Naive Bayes | 62.27% | 0.4171 | 0.5554 |
-| Embeddings | Decision Tree | 46.19% | 0.3322 | 0.4652 |
-| BoW | KNN | 30.96% | 0.2086 | 0.3280 |
+| **TF-IDF** | **MLP (Neural Net)** | **80.98%** | **0.7312** | **0.8077** |
+| **BoW** | **MLP (Neural Net)** | **78.95%** | **0.7168** | **0.7883** |
+| **TF-IDF** | **SVM** | **78.78%** | **0.7141** | **0.7823** |
+| **BoW** | **Logistic Regression** | **75.89%** | **0.6799** | **0.7551** |
+| **BoW** | **Naive Bayes** | **77.25%** | **0.6773** | **0.7706** |
+| **BoW** | **SVM** | **74.53%** | **0.6592** | **0.7429** |
+| **TF-IDF** | **KNN** | **75.21%** | **0.6478** | **0.7447** |
+| **Embeddings** | **Logistic Regression** | **71.48%** | **0.6287** | **0.7109** |
+| **Embeddings** | **SVM** | **70.80%** | **0.6165** | **0.7040** |
+| **Embeddings** | **Naive Bayes** | **68.59%** | **0.6156** | **0.6959** |
+| Embeddings | MLP (Neural Net) | 70.29% | 0.6088 | 0.7008 |
+| TF-IDF | Logistic Regression | 70.63% | 0.6078 | 0.6808 |
+| BoW | Random Forest | 69.44% | 0.5797 | 0.6672 |
+| Embeddings | KNN | 68.93% | 0.5738 | 0.6830 |
+| TF-IDF | Random Forest | 68.59% | 0.5684 | 0.6558 |
+| Embeddings | Random Forest | 62.99% | 0.4726 | 0.5926 |
+| BoW | Decision Tree | 58.40% | 0.4610 | 0.5797 |
+| TF-IDF | Decision Tree | 57.73% | 0.4352 | 0.5663 |
+| TF-IDF | Naive Bayes | 57.05% | 0.3482 | 0.4932 |
+| Embeddings | Decision Tree | 42.78% | 0.2798 | 0.4173 |
+| BoW | KNN | 28.01% | 0.1870 | 0.3111 |
 
 **Nhận xét mô hình có giám sát:**
-* **Bước nhảy vọt về hiệu năng khi gộp Title + Abstract và giữ chữ số:**
-  - Mô hình đạt đỉnh cao mới: **TF-IDF + SVM** cán mốc **Accuracy 81.86%** và **F1-Macro 0.7471** (F1-Weighted đạt **81.47%**).
-  - Cả **TF-IDF + MLP** và **BoW + MLP** đều vượt mốc **80.65%**, BoW + Naive Bayes đạt **80.29%**.
+* **Hiệu năng ấn tượng trên quy mô 5.000 mẫu:**
+  - Mô hình dẫn đầu: **TF-IDF + MLP (Mạng nơ-ron)** đạt **Accuracy 80.98%** và **F1-Macro 0.7312** (F1-Weighted đạt **80.77%**).
+  - **BoW + MLP** và **TF-IDF + SVM** bám sát nút với độ chính xác xấp xỉ **79%**, F1-Macro đạt trên **0.714**.
   - Tiêu đề (Title) cung cấp các thuật ngữ cốt lõi, trong khi việc giữ chữ số (`2D`, `3D`, `GPT-4`, `TeV`) giúp các mô hình phân biệt rạch ròi các khái niệm vật lý và toán học.
 * **Nguyên tắc ghép cặp mô hình & đặc trưng chuẩn xác:**
   - Với BoW/TF-IDF (ma trận thưa): `MultinomialNB` phát huy tối đa xác suất đếm rời rạc.
@@ -234,17 +234,17 @@ Các kết quả chi tiết được tổng hợp tự động trong file `outpu
 
 ### 5.2. Học không giám sát (Unsupervised Learning - Phân cụm K-Means)
 
-Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập trên 3 không gian biểu diễn đặc trưng (BoW, TF-IDF, Embeddings) trên **4.131 bài báo** mà hoàn toàn **không sử dụng nhãn lớp khi gom cụm**:
+Thực nghiệm áp dụng thuật toán **K-Means ($k=12$ cụm)** độc lập trên 3 không gian biểu diễn đặc trưng (BoW, TF-IDF, Embeddings) trên **2.941 bài báo** mà hoàn toàn **không sử dụng nhãn lớp khi gom cụm**:
 
 | Bộ đặc trưng | Số cụm ($k$) | Silhouette Score | Adjusted Rand Index (ARI) | Normalized Mutual Info (NMI) |
 |---|:---:|:---:|:---:|:---:|
-| **TF-IDF** | 12 | 0.0075 | 0.2654 | **0.4792** |
-| **Embeddings** | 12 | **0.0325** | **0.3127** | 0.4541 |
-| **BoW** | 12 | 0.0323 | -0.0166 | 0.2352 |
+| **Embeddings** | 12 | **0.0339** | **0.3122** | **0.4434** |
+| **TF-IDF** | 12 | 0.0076 | 0.1507 | 0.4057 |
+| **BoW** | 12 | -0.0134 | 0.0012 | 0.2308 |
 
 **Nhận xét phân cụm K-Means:**
-* **Chỉ số NMI của TF-IDF tăng vọt lên 0.4792:** Khi kết hợp Title + Abstract với 12.000 max features, không gian TF-IDF đã gom cụm các chủ đề khoa học tự nhiên một cách cực kỳ trùng khớp với nhãn chuyên môn của con người.
-* **Sentence Embeddings** duy trì ARI vượt bậc (**0.3127**) và NMI (**0.4541**), thể hiện tính toàn vẹn ngữ nghĩa cao.
+* **Sentence Embeddings** vượt trội toàn diện cả về ARI (**0.3122**) và NMI (**0.4434**), cho thấy vector ngữ nghĩa đa chiều phản ánh cấu trúc lĩnh vực học thuật thực tế một cách cực kỳ rõ nét mà không cần bất kỳ sự can thiệp có giám sát nào.
+* **TF-IDF** đạt NMI **0.4057**, cho thấy việc gộp Title + Abstract với 12.000 max features giúp gom cụm từ vựng rất hiệu quả.
 * Biểu đồ trực quan hóa chất lượng phân cụm được lưu tại `outputs/kmeans_clustering.png` và bảng kết quả LaTeX tại `outputs/kmeans_table.tex`.
 
 ---
