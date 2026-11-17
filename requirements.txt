@@ -2,8 +2,6 @@ datasets
 pandas
 scikit-learn
 sentence-transformers
-underthesea
-pyvi
 streamlit
 matplotlib
 seaborn

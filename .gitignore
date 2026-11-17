@@ -15,6 +15,9 @@ data/*
 # Experiment outputs and figures (keep directory structure with .gitkeep)
 outputs/*
 !outputs/.gitkeep
+!outputs/*.png
+!outputs/*.csv
+!outputs/*.tex
 
 # Virtual environments
 venv/
