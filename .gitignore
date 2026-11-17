@@ -10,6 +10,7 @@ huggingface_cache/
 # Datasets and processed data (keep directory structure with .gitkeep)
 data/*
 !data/.gitkeep
+!data/processed_data.csv
 
 # Experiment outputs and figures (keep directory structure with .gitkeep)
 outputs/*
